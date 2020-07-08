@@ -2,7 +2,7 @@
 
 import os
 
-cwd = os.cwd()
+cwd = os.getcwd()
 
 input_dir = os.path.join(cwd, 'input_dir')
 output = os.path.join(cwd, 'output_dir', 'file.txt')
