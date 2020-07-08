@@ -1,0 +1,15 @@
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: qiime2/linux-worker
+    version: latest
+params:
+  PATH: /opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+inputs:
+  - name: covid-ci
+  - name: input_dir
+outputs:
+  - name: output_dir
+run:
+  path: covid-ci/bin/import.py

@@ -1,0 +1,129 @@
+resource_types:
+  - name: simple-remote-directory-resource
+    type: docker-image
+    source:
+      repository: qiime2/simple-remote-directory-resource
+
+resources:
+  - name: covid-ci
+    type: git
+    source:
+      uri: https://github.com/caporaso-lab/covid-ci
+      branch: master
+
+  - name: gisaid-upload
+    type: simple-remote-directory-resource
+    check_every: 1m
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_gisaid_upload))
+
+  - name: tgen-north-upload
+    type: simple-remote-directory-resource
+    check_every: 1m
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_tgen_north_upload))
+
+  - name: ua-upload
+    type: simple-remote-directory-resource
+    check_every: 1m
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_ua_upload))
+
+  - name: gisaid-seqs
+    type: simple-remote-directory-resource
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_gisaid_seqs))
+
+  - name: tgen-north-seqs
+    type: simple-remote-directory-resource
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_tgen_north_seqs))
+
+  - name: ua-seqs
+    type: simple-remote-directory-resource
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_ua_seqs))
+
+jobs:
+  - name: import-gisaid
+    public: true
+    plan:
+      - get: covid-ci
+      - get: gisaid-upload
+        trigger: true
+      - task: import-gisaid
+        file: covid-ci/tasks/import.yaml
+        input_mapping:
+          input_dir: gisaid-upload
+          output_dir: gisaid-seqs
+        on_failure:
+          task: report-error
+          file: covid-ci/tasks/complain.yaml
+          params:
+            EMAIL: ((email_gisaid))
+      - put: gisaid-seqs
+
+
+  - name: import-tgen-north
+    public: true
+    plan:
+      - get: covid-ci
+      - get: tgen-north-upload
+        trigger: true
+      - task: import-tgen-north
+        file: covid-ci/tasks/import.yaml
+        input_mapping:
+          input_dir: tgen-north-upload
+          output_dir: tgen-north-seqs
+        on_failure:
+          task: report-error
+          file: covid-ci/tasks/complain.yaml
+          params:
+            EMAIL: ((email_tgen_north))
+      - put: tgen-north-seqs
+
+  - name: import-ua
+    public: true
+    plan:
+      - get: covid-ci
+      - get: ua-upload
+        trigger: true
+      - task: import-ua
+        file: covid-ci/tasks/import.yaml
+        input_mapping:
+          input_dir: ua-upload
+          output_dir: ua-seqs
+        on_failure:
+          task: report-error
+          file: covid-ci/tasks/complain.yaml
+          params:
+            EMAIL: ((email_ua))
+      - put: ua-seqs
+
