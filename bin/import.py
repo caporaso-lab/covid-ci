@@ -11,5 +11,3 @@ print(os.path.listdir(input_dir))
 
 with open(output, 'w') as fh:
     fh.write("hello world")
-
-
