@@ -82,6 +82,7 @@ jobs:
         file: covid-ci/tasks/import.yaml
         input_mapping:
           input_dir: gisaid-upload
+        output_mapping:
           output_dir: gisaid-seqs
         on_failure:
           task: report-error
@@ -101,6 +102,7 @@ jobs:
         file: covid-ci/tasks/import.yaml
         input_mapping:
           input_dir: tgen-north-upload
+        output_mapping:
           output_dir: tgen-north-seqs
         on_failure:
           task: report-error
@@ -119,6 +121,7 @@ jobs:
         file: covid-ci/tasks/import.yaml
         input_mapping:
           input_dir: ua-upload
+        output_mapping:
           output_dir: ua-seqs
         on_failure:
           task: report-error
