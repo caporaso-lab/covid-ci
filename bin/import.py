@@ -4,10 +4,12 @@ import os
 
 cwd = os.getcwd()
 
-input_dir = os.path.join(cwd, 'input_dir')
-output = os.path.join(cwd, 'output_dir', 'file.txt')
+input_ref = os.path.join(cwd, 'input_dir', 'reference.link')
+with open(input_ref) as fh:
+    print(fh.read())
 
-print(os.listdir(input_dir))
+created_file = os.path.join(os.getenv('EXTERNAL_RESOURCE_DIR'), 'example.txt')
 
+output = os.path.join(cwd, 'output_dir', 'reference.link')
 with open(output, 'w') as fh:
-    fh.write("hello world")
+    fh.write(created_file)

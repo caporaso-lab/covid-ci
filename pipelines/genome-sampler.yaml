@@ -80,6 +80,8 @@ jobs:
         trigger: true
       - task: import-gisaid
         file: covid-ci/tasks/import.yaml
+        params:
+          EXTERNAL_RESOURCE_DIR: ((path_gisaid_seqs))
         input_mapping:
           input_dir: gisaid-upload
         output_mapping:
@@ -93,7 +95,6 @@ jobs:
         params:
           source: gisaid-seqs/
 
-
   - name: import-tgen-north
     public: true
     plan:
@@ -102,6 +103,8 @@ jobs:
         trigger: true
       - task: import-tgen-north
         file: covid-ci/tasks/import.yaml
+        params:
+          EXTERNAL_RESOURCE_DIR: ((path_tgen_north_seqs))
         input_mapping:
           input_dir: tgen-north-upload
         output_mapping:
@@ -123,6 +126,8 @@ jobs:
         trigger: true
       - task: import-ua
         file: covid-ci/tasks/import.yaml
+        params:
+          EXTERNAL_RESOURCE_DIR: ((path_ua_seqs))
         input_mapping:
           input_dir: ua-upload
         output_mapping:
