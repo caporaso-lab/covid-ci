@@ -90,6 +90,8 @@ jobs:
           params:
             EMAIL: ((email_gisaid))
       - put: gisaid-seqs
+        params:
+          source: gisaid-seqs/
 
 
   - name: import-tgen-north
@@ -110,6 +112,8 @@ jobs:
           params:
             EMAIL: ((email_tgen_north))
       - put: tgen-north-seqs
+        params:
+          source: tgen-north-seqs/
 
   - name: import-ua
     public: true
@@ -129,4 +133,5 @@ jobs:
           params:
             EMAIL: ((email_ua))
       - put: ua-seqs
-
+        params:
+          source: ua-seqs/
