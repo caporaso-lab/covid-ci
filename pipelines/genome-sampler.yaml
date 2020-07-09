@@ -82,6 +82,10 @@ jobs:
         file: covid-ci/tasks/import.yaml
         params:
           EXTERNAL_RESOURCE_DIR: ((path_gisaid_seqs))
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
         input_mapping:
           input_dir: gisaid-upload
         output_mapping:
@@ -105,6 +109,10 @@ jobs:
         file: covid-ci/tasks/import.yaml
         params:
           EXTERNAL_RESOURCE_DIR: ((path_tgen_north_seqs))
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
         input_mapping:
           input_dir: tgen-north-upload
         output_mapping:
@@ -128,6 +136,10 @@ jobs:
         file: covid-ci/tasks/import.yaml
         params:
           EXTERNAL_RESOURCE_DIR: ((path_ua_seqs))
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
         input_mapping:
           input_dir: ua-upload
         output_mapping:
