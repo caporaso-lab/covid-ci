@@ -26,7 +26,7 @@ def make_client_from_env():
     user = os.getenv('USERNAME')
     pk = os.getenv('PRIVATE_KEY')
     kt = os.getenv('KEY_TYPE')
-    key = common.make_key_from(pk, kt)
+    key = make_key_from(pk, kt)
     with make_client(host, user, key) as client:
         yield client
 
