@@ -99,6 +99,31 @@ jobs:
         params:
           source: gisaid-seqs/
 
+  - name: filter-gisaid
+    public: true
+    plan:
+      - get: covid-ci
+      - get: gisaid-seqs
+        trigger: true
+      - task: filter-gisaid
+        file: covid-ci/tasks/execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+
+          Q2_ACTION: 'genome_sampler:filter_seqs'
+          Q2_I_sequences: 'input1'
+          Q2_P_min_length: 20000
+          Q2_O_filtered_sequences: ((path_gisaid_filtered_seqs))
+
+        input_mapping:
+          input1: gisaid-seqs
+      - put: gisaid-filtered-seqs
+        params:
+          source: output/filtered_sequences/
+
   - name: import-tgen-north
     public: true
     plan:
