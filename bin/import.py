@@ -5,6 +5,7 @@ import os
 import sys
 
 print(sys.version)
+print(os.__file__)
 
 import common
 
