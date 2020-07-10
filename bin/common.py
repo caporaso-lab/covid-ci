@@ -27,7 +27,7 @@ def make_client_from_env():
     pk = os.getenv('PRIVATE_KEY')
     kt = os.getenv('KEY_TYPE')
     key = common.make_key_from(pk, kt)
-    with make_client(host, user, key) as client
+    with make_client(host, user, key) as client:
         yield client
 
 
@@ -59,9 +59,9 @@ def get_q2_environment_variables():
     return result
 
 def _environ_search_strip(search):
-    return {k.lstrip(search):v 
+    return {k.lstrip(search):v
             for k,v in os.environ.items() if k.startswith(search)}
 
 def _split_values(dict_, delimiter):
-    return {k:(v.split(delimiter) if delimiter in v else v) 
+    return {k:(v.split(delimiter) if delimiter in v else v)
             for k,v in dict_.items()}
