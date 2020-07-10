@@ -17,7 +17,7 @@ with open(input_ref) as fh:
 
 created_file = os.path.join(os.getenv('EXTERNAL_RESOURCE_DIR'), 'example.txt')
 
-host = os.getenv('HOST')
+host = os.getenv('HOSTNAME')
 user = os.getenv('USERNAME')
 pk = os.getenv('PRIVATE_KEY')
 kt = os.getenv('KEY_TYPE')
