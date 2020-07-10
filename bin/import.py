@@ -3,9 +3,10 @@
 import io
 import os
 import sys
-import common
 
 print(sys.version)
+
+import common
 
 cwd = os.getcwd()
 
