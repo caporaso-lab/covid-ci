@@ -2,7 +2,10 @@
 
 import io
 import os
+import sys
 import common
+
+print(sys.version)
 
 cwd = os.getcwd()
 
