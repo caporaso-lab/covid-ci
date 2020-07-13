@@ -113,10 +113,13 @@ jobs:
           PRIVATE_KEY: ((private_key))
           KEY_TYPE: ((key_type))
 
-          Q2_ACTION: 'genome_sampler:filter_seqs'
+          Q2_ACTION: 'genome_sampler::filter_seqs'
           Q2_I_sequences: 'input1'
           Q2_P_min_length: 20000
           Q2_O_filtered_sequences: ((path_gisaid_filtered_seqs))
+
+         # Q2_C_example: '((path_md))::Some_Col'
+         # Q2_M_other: '((path_md1)) ((path_md2))'
 
         input_mapping:
           input1: gisaid-seqs

@@ -9,6 +9,8 @@ params:
 inputs:
   - name: covid-ci
   - name: input1
+outputs:
+  - name: outputs
 run:
   path: covid-ci/bin/execute.py
   
