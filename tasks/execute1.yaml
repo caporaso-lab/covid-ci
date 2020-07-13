@@ -11,3 +11,4 @@ inputs:
   - name: input1
 run:
   path: covid-ci/bin/execute.py
+  
