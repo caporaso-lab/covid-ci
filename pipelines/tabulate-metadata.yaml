@@ -48,7 +48,7 @@ jobs:
           WORKDIR: ((workdir))
 
           Q2_ACTION: 'metadata::tabulate'
-          Q2_M_input: ((path_metadata_upload))
+          Q2_M_input: input1
           Q2_O_visualization: ((path_tabulated_metadata))
 
           SLURM_cpus_per_task: 1
