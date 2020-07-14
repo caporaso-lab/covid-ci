@@ -32,7 +32,7 @@ script = io.StringIO(template.render(concourse_args=dereference,
 
 slurm_conf = common.get_slurm_environment_variables()
 
-job_dir = os.path.join(common.get_working_dir(), str(uuid.uuid4())
+job_dir = os.path.join(common.get_working_dir(), str(uuid.uuid4()))
 submission_template = common.get_template('job.sh')
 submission = io.StringIO(
     submission_template.render(job_name='', workdir=job_dir, **slurm_conf))
