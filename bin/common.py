@@ -64,7 +64,7 @@ def get_slurm_environment_variables():
 def get_q2_environment_variables():
     result = {}
 
-    result['action'], result['plugin'] = os.environ['Q2_ACTION'].split('::')
+    result['plugin'], result['action'] = os.environ['Q2_ACTION'].split('::')
 
     result['inputs'] = _split_values(_environ_search_strip('Q2_I_'), ' ')
 

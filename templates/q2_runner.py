@@ -7,12 +7,12 @@ import qiime2
 import qiime2.sdk as sdk
 from qiime2.sdk.util import parse_primitive
 
-from qiime2.plugins.{{ plugin }}.actions import {{ action }}
+import qiime2.plugins.{{ plugin }}.actions as q2_{{ plugin }}
 
 concourse_args = {{ concourse_args }}
 
 pm = sdk.PluginManager()
-action = sdk.get_plugin(id={{ plugin }}).actions[{{ action }}]
+action = sdk.get_plugin(id='{{ plugin }}').actions['{{ action }}']
 
 # generate kwargs after dereferencing QZAs and MD
 kwargs = {}
@@ -53,7 +53,7 @@ for param, spec in actions.signature.parameters.items():
     kwargs[param] = loaded
 
 
-results = {{ action }}(**kwargs)
+results = q2_{{ plugin }}.{{ action }}(**kwargs)
 
 manifest = {}
 
