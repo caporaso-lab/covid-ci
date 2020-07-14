@@ -57,18 +57,23 @@ with common.make_client_from_env() as client:
     channel.exec_command(f'sbatch --wait {job_path}')
     output_path = os.path.join(job_dir, 'stdio.out')
     while not channel.exit_status_ready():
+        print('waiting')
         time.sleep(0.5)
         if channel.recv_ready():
+            print('sbatch stdout')
             print(channel.recv(1024), end='')
 
         try:
+            print('looking for stdout')
             with sftp.open(output_path, 'r') as fh:
+                print('stdout!')
                 for line in fh:
                     print(line, end='')
             break
         except IOError:
+            print('no stdout')
             pass
-        
+    print('looking for manifest')   
 # 6. If successful, transfer the output manifest and write out reference.link
 #    files
 
