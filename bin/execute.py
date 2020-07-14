@@ -41,6 +41,7 @@ submission = io.StringIO(
 
 with common.make_client_from_env() as client:
     sftp = client.open_sftp()
+    sftp.mkdir(job_dir)
     sftp.putfo(script, os.path.join(job_dir, 'job.py'))
     job_path = os.path.join(job_dir, 'job.sh')
     sftp.putfo(submission, job_path)
