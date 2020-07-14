@@ -108,7 +108,7 @@ def deref_block(block):
 
 
 def deref(fp):
-    with open(fp) as fh:
+    with open(os.path.join(fp, 'reference.link')) as fh:
         return fh.readline()
 
 def _listify(obj):
