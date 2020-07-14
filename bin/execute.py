@@ -3,6 +3,7 @@ import io
 import os
 import uuid
 import time
+import json
 
 import common
 
@@ -25,7 +26,7 @@ dereferenced['outputs'] = q2_vars['outputs']
 #    for consumption on bacon
 
 template = common.get_template('q2_runner.py')
-script = io.StringIO(template.render(concourse_args=dereference, 
+script = io.StringIO(template.render(concourse_args=dereferenced,
                                      plugin=q2_vars['plugin'], 
                                      action=q2_vars['action']))
 
