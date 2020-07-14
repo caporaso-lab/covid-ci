@@ -50,7 +50,9 @@ with common.make_client_from_env() as client:
 # 5. Use paramiko to `srun` (or maybe `sbatch` and `tail`) the script,
 #    blocking until the queue finishes the job
 
-    channel = client.invoke_shell()
+    #channel = client.invoke_shell()
+    transport = client.get_transport()
+    channel = transport.open_session()
     channel.set_combine_stderr(True)
     channel.exec_command(f'sbatch --wait {job_path}')
     output_path = os.path.join(job_dir, 'stdio.out')
