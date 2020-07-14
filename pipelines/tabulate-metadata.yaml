@@ -1,0 +1,62 @@
+resource_types:
+  - name: simple-remote-directory-resource
+    type: docker-image
+    source:
+      repository: qiime2/simple-remote-directory-resource
+
+resources:
+  - name: covid-ci
+    type: git
+    source:
+      uri: https://github.com/caporaso-lab/covid-ci
+      branch: stash
+
+  - name: metadata-upload
+    type: simple-remote-directory-resource
+    check_every: 1m
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_metadata_upload))
+
+  - name: tabulated-metadata
+    type: simple-remote-directory-resource
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_tabulated_metadata))
+
+jobs:
+  - name: tabulate-metadata
+    public: true
+    plan:
+      - get: covid-ci
+      - get: metadata-upload
+        trigger: true
+      - task: tabulate_metadata
+        file: covid-ci/tasks/execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: 'metadata::tabulate'
+          Q2_M_input: ((path_metadata_upload))
+          Q2_O_visualization: ((path_tabulated_metadata))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 1:00:00
+          SLURM_mem: 4096
+
+        input_mapping:
+          input1: metadata-upload
+      - put: tabulated-metadata
+        params:
+          source: outputs/visualization/

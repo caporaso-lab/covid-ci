@@ -32,7 +32,7 @@ script = io.StringIO(template.render(concourse_args=dereference,
 
 slurm_conf = common.get_slurm_environment_variables()
 
-job_dir = os.path.join(???????, str(uuid.uuid4())
+job_dir = os.path.join(common.get_working_dir(), str(uuid.uuid4())
 submission_template = common.get_template('job.sh')
 submission = io.StringIO(
     submission_template.render(job_name='', workdir=job_dir, **slurm_conf))
@@ -70,6 +70,7 @@ with common.make_client_from_env() as client:
     with sftp.open(os.path.join(job_dir, 'manifest.json'), 'r') as fh:
         manifest = json.loads(fh.read())
         for key, path in manifest.items():
-            outpath = os.path.join('outputs', key, 'reference.link')
-            with open(outpath, 'w') as fh:
+            outdir = os.path.join('outputs', key)
+            os.mkdir(outdir)
+            with open(os.path.join(outdir, 'reference.link'), 'w') as fh:
                 fh.write(path)

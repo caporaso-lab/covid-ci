@@ -76,6 +76,9 @@ def get_q2_environment_variables():
 
     return result
 
+def get_working_dir():
+    return os.environ['WORKDIR']
+
 
 def _environ_search_strip(search):
     return {k.lstrip(search):v

@@ -118,6 +118,8 @@ jobs:
           Q2_P_min_length: 20000
           Q2_O_filtered_sequences: ((path_gisaid_filtered_seqs))
 
+          SLURM_mem: 12000
+
          # Q2_C_example: '((path_md))::Some_Col'
          # Q2_M_other: '((path_md1)) ((path_md2))'
 
