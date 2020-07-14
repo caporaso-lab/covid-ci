@@ -61,7 +61,7 @@ with common.make_client_from_env() as client:
         time.sleep(0.5)
         if channel.recv_ready():
             print('sbatch stdout')
-            print(channel.recv(1024), end='')
+            print(channel.recv(1024).decode('utf-8'), end='')
 
         try:
             print('looking for stdout')
@@ -78,6 +78,7 @@ with common.make_client_from_env() as client:
 #    files
 
     # script has finished
+    time.sleep(5)
     with sftp.open(os.path.join(job_dir, 'manifest.json'), 'r') as fh:
         manifest = json.loads(fh.read())
         for key, path in manifest.items():
