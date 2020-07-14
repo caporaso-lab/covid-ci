@@ -12,19 +12,19 @@ import qiime2.plugins.{{ plugin }}.actions as q2_{{ plugin }}
 concourse_args = {{ concourse_args }}
 
 pm = sdk.PluginManager()
-action = sdk.get_plugin(id='{{ plugin }}').actions['{{ action }}']
+action = pm.get_plugin(id='{{ plugin }}').actions['{{ action }}']
 
 # generate kwargs after dereferencing QZAs and MD
 kwargs = {}
 
-for param, spec in actions.signature.parameters.items():
+for param, spec in action.signature.parameters.items():
     if param not in concourse_args['params']:
         continue
     arg = concourse_args['params'][param]
     deserialized = parse_primitive(spec.qiime_type, arg)
     kwargs[param] = deserialized
 
-for param, spec in actions.signature.parameters.items():
+for param, spec in action.signature.parameters.items():
     if param not in concourse_args['metadata']:
         continue
     arg = concourse_args['metadata'][param]
@@ -35,14 +35,14 @@ for param, spec in actions.signature.parameters.items():
         loaded = qiime2.Metadata.load(arg)
     kwargs[param] = loaded
 
-for param, spec in actions.signature.parameters.items():
+for param, spec in action.signature.parameters.items():
     if param not in concourse_args['columns']:
         continue
     file_, col = concourse_args['columns'][param]
     loaded = qiime2.Metadata.load(file_).get_column(col)
     kwargs[param] = loaded
 
-for param, spec in actions.signature.parameters.items():
+for param, spec in action.signature.parameters.items():
     if param not in concourse_args['inputs']:
         continue
     arg = concourse_args['inputs'][param]
@@ -58,7 +58,7 @@ results = q2_{{ plugin }}.{{ action }}(**kwargs)
 manifest = {}
 
 for key, value in zip(results._fields, results):
-    uuid = value.uuid
+    uuid = str(value.uuid)
     output_path = os.path.join(concourse_args['outputs'][key], uuid)
     output_path = value.save(output_path)
     manifest[key] = output_path
