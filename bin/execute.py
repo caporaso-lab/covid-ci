@@ -72,10 +72,10 @@ with common.make_client_from_env() as client:
                 pass
     stdout_fh.close()
 
-    clean_exit = channel.recv_exit_status()
-    if not clean_exit:
+    error_code = channel.recv_exit_status()
+    if error_code:
         print('There was an error completing the job.')
-        sys.exit(clean_exit)
+        sys.exit(error_code)
 # 6. If successful, transfer the output manifest and write out reference.link
 #    files
 
