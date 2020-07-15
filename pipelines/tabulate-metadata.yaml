@@ -51,6 +51,16 @@ resources:
       key_type: ((key_type))
       path: ((path_import_result))
 
+  - name: export-result
+    type: simple-remote-directory-resource
+    check_every: 5m
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_export_result))
+
 jobs:
   - name: tabulate-metadata
     public: true
@@ -111,3 +121,33 @@ jobs:
         params:
           source: outputs/result/
 
+  - name: export-test
+    public: true
+    plan:
+      - get: covid-ci
+      - get: import-result
+        trigger: true
+      - task: export_test
+        file: covid-ci/tasks/execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: export
+          Q2_INPUT: input1
+          Q2_FORMAT: BIOMV100Format
+          Q2_EXT: .biom
+          Q2_OUTPUT: ((path_export_result))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:05:00
+          SLURM_mem: 4096
+
+        input_mapping:
+          input1: import-result
+      - put: export-result
+        params:
+          source: outputs/result/

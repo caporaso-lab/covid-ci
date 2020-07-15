@@ -55,11 +55,12 @@ elif q2_vars['action'] == 'export':
     else:
         format_ = None
 
+    ext = q2_vars['ext']
     output = q2_vars['output']
 
     template = common.get_template('q2_export.py')
     script = io.StringIO(template.render(input_=input_, format_=format_,
-                                         output=output))
+                                         ext=ext, output=output))
     job_name = 'export'
 else:
     raise Exception(f"unrecognized action {q2_vars['action']}")
