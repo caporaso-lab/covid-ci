@@ -5,7 +5,7 @@ import qiime2
 import qiime2.util
 
 artifact = qiime2.Artifact.load('{{ input_ }}')
-view = artifact.view('{{ format_ }}')
+view = artifact.view({{ format_ }})
 
 path = os.path.join('{{ output }}', str(artifact.uuid) + '{{ ext }}')
 
