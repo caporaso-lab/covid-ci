@@ -3,9 +3,10 @@ import os
 import json
 import qiime2
 import qiime2.util
+import qiime2.sdk as sdk
 
 artifact = qiime2.Artifact.load('{{ input_ }}')
-view = artifact.view({{ format_ }})
+view = artifact.view(sdk.parse_format({{ format_ }}))
 
 path = os.path.join('{{ output }}', str(artifact.uuid) + '{{ ext }}')
 
