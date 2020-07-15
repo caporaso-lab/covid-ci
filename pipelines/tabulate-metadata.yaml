@@ -127,6 +127,7 @@ jobs:
       - get: covid-ci
       - get: import-result
         trigger: true
+        passed: [import-test]
       - task: export_test
         file: covid-ci/tasks/execute1.yaml
         params:
