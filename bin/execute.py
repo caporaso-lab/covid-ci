@@ -27,18 +27,18 @@ dereferenced['outputs'] = q2_vars['outputs']
 
 template = common.get_template('q2_runner.py')
 script = io.StringIO(template.render(concourse_args=dereferenced,
-                                     plugin=q2_vars['plugin'], 
+                                     plugin=q2_vars['plugin'],
                                      action=q2_vars['action']))
 
 # 4. Use paramiko to transfer the templated script
 
-slurm_conf = common.get_slurm_environment_variables()
+slurm_vars = common.get_slurm_environment_variables()
 
 job_dir = os.path.join(common.get_working_dir(), str(uuid.uuid4()))
 submission_template = common.get_template('job.sh')
 submission = io.StringIO(
     submission_template.render(job_name='tabulate-metadata', workdir=job_dir,
-                               **slurm_conf))
+                               slurm_vars=slurm_vars))
 
 with common.make_client_from_env() as client:
     sftp = client.open_sftp()
@@ -64,7 +64,7 @@ with common.make_client_from_env() as client:
             print('sbatch stdout')
             print(channel.recv(1024).decode('utf-8'), end='')
 
-        if stdout_fh is None:   
+        if stdout_fh is None:
             print('looking for stdout')
             try:
                 print('stdout!')
@@ -75,7 +75,7 @@ with common.make_client_from_env() as client:
                 print('no stdout')
                 pass
     stdout_fh.close()
-    print('looking for manifest')   
+    print('looking for manifest')
 # 6. If successful, transfer the output manifest and write out reference.link
 #    files
 

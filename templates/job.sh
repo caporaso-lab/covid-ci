@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --job-name={{ job_name }}
 #SBATCH --chdir={{ workdir }}
-#SBATCH --cpus-per-task={{ cpus_per_task}}
-#SBATCH --time={{ time }}
-#SBATCH --mem={{ mem }}
+{% for param, arg in slurm_vars.items() %}
+#SBATCH --{{ param|replace('_', '-') }}={{ arg }}
+{% endfor %}
 #SBATCH --output=stdio.out
 #SBATCH --hint=compute_bound
 

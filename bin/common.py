@@ -32,7 +32,7 @@ def make_client_from_env():
         yield client
 
 def get_template(name):
-    path = os.path.join(os.path.dirname(__file__), '..', 'templates')   
+    path = os.path.join(os.path.dirname(__file__), '..', 'templates')
     loader = jinja2.FileSystemLoader(searchpath=path)
     env = jinja2.Environment(loader=loader)
     return env.get_template(name)
@@ -54,11 +54,7 @@ def make_key_from(key_string, key_type):
 
 
 def get_slurm_environment_variables():
-    return {
-        'cpus_per_task': os.environ['SLURM_cpus_per_task'],
-        'time': os.environ['SLURM_time'],
-        'mem': os.environ['SLURM_mem']
-    }
+    return _environ_search_strip('SLURM_')
 
 
 def get_q2_environment_variables():
