@@ -62,7 +62,7 @@ def get_q2_environment_variables():
 
     q2_vars = _pop_strip(os.environ.copy(), 'Q2_')
     if '::' in q2_vars['ACTION']:
-        result['plugin'], result['action'] = os.environ['ACTION'].split('::')
+        result['plugin'], result['action'] = q2_vars['ACTION'].split('::')
         del q2_vars['ACTION']
 
 
@@ -87,7 +87,7 @@ def _pop_strip(mapping, search):
     for key, value in list(mapping.items()):
         if key.startswith(search):
             popped[key.lstrip(search)] = value
-            del mapping[key] 
+            del mapping[key]
     return popped
 
 
