@@ -65,3 +65,6 @@ for key, value in zip(results._fields, results):
 
 with open(os.path.join(os.getcwd(), 'manifest.json'), 'w') as fh:
     fh.write(json.dumps(manifest))
+
+
+raise Exception("OH NO")

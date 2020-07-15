@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import io
 import os
+import sys
 import uuid
 import time
 import json
@@ -58,29 +59,27 @@ with common.make_client_from_env() as client:
     output_path = os.path.join(job_dir, 'stdio.out')
     stdout_fh = None
     while not channel.exit_status_ready():
-        print('waiting')
         time.sleep(0.5)
         if channel.recv_ready():
-            print('sbatch stdout')
             print(channel.recv(1024).decode('utf-8'), end='')
 
         if stdout_fh is None:
-            print('looking for stdout')
             try:
-                print('stdout!')
                 stdout_fh = iter(sftp.open(output_path, 'r'))
                 for line in stdout_fh:
                     print(line, end='')
             except IOError:
-                print('no stdout')
                 pass
     stdout_fh.close()
-    print('looking for manifest')
+
+    clean_exit = channel.recv_exit_status()
+    if not clean_exit:
+        print('There was an error completing the job.')
+        sys.exit(clean_exit)
 # 6. If successful, transfer the output manifest and write out reference.link
 #    files
 
     # script has finished
-    time.sleep(5)
     with sftp.open(os.path.join(job_dir, 'manifest.json'), 'r') as fh:
         manifest = json.loads(fh.read())
         for key, path in manifest.items():
