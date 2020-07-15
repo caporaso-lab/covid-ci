@@ -34,8 +34,8 @@ script = io.StringIO(template.render(concourse_args=dereferenced,
 # 4. Use paramiko to transfer the templated script
 
 slurm_vars = common.get_slurm_environment_variables()
-
-job_dir = os.path.join(common.get_working_dir(), str(uuid.uuid4()))
+job_id = str(uuid.uuid4())
+job_dir = os.path.join(common.get_working_dir(), job_id)
 submission_template = common.get_template('job.sh')
 submission = io.StringIO(
     submission_template.render(job_name='tabulate-metadata', workdir=job_dir,
@@ -52,6 +52,7 @@ with common.make_client_from_env() as client:
 #    blocking until the queue finishes the job
 
     #channel = client.invoke_shell()
+    print(f"Preparing job: {job_id}")
     transport = client.get_transport()
     channel = transport.open_session()
     channel.set_combine_stderr(True)
