@@ -35,7 +35,6 @@ if 'plugin' in q2_vars:
 elif q2_vars['action'] == 'import':
     input_ = common.deref(q2_vars['input'])
     type_ = q2_vars['type']
-    print(q2_vars)
 
     if 'format' in q2_vars:
         format_ = repr(q2_vars['format'])
