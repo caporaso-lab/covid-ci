@@ -37,7 +37,7 @@ elif q2_vars['action'] == 'import':
     type_ = q2_vars['type']
 
     if 'format' in q2_vars:
-        format_ = q2_vars['format']
+        format_ = repr(q2_vars['format'])
     else:
         format_ = None
 
@@ -51,7 +51,7 @@ elif q2_vars['action'] == 'export':
     input_ = common.deref(q2_vars['input'])
 
     if 'format' in q2_vars:
-        format_ = q2_vars['format']
+        format_ = repr(q2_vars['format'])
     else:
         format_ = None
 
