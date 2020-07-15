@@ -93,6 +93,5 @@ with common.make_client_from_env() as client:
                 fh.write(path)
 
     for file_ in sftp.listdir(job_dir):
-        print(file_)
-        sftp.remove(file_)
+        sftp.remove(os.path.join(job_dir, file_))
     sftp.rmdir(job_dir)
