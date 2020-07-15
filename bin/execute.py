@@ -26,7 +26,7 @@ dereferenced['outputs'] = q2_vars['outputs']
 #    this templated script. The script should also generate an output manifest
 #    for consumption on bacon
 
-template = common.get_template('q2_runner.py')
+template = common.get_template('q2_action.py')
 script = io.StringIO(template.render(concourse_args=dereferenced,
                                      plugin=q2_vars['plugin'],
                                      action=q2_vars['action']))
@@ -37,8 +37,9 @@ slurm_vars = common.get_slurm_environment_variables()
 job_id = str(uuid.uuid4())
 job_dir = os.path.join(common.get_working_dir(), job_id)
 submission_template = common.get_template('job.sh')
+job_name = '%s::%s' % (q2_vars['plugin'], q2_vars['action'])
 submission = io.StringIO(
-    submission_template.render(job_name='tabulate-metadata', workdir=job_dir,
+    submission_template.render(job_name=job_name, workdir=job_dir,
                                slurm_vars=slurm_vars))
 
 with common.make_client_from_env() as client:

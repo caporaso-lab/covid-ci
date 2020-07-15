@@ -54,21 +54,27 @@ def make_key_from(key_string, key_type):
 
 
 def get_slurm_environment_variables():
-    return _environ_search_strip('SLURM_')
+    return _pop_strip(os.environ.copy(), 'SLURM_')
 
 
 def get_q2_environment_variables():
     result = {}
 
-    result['plugin'], result['action'] = os.environ['Q2_ACTION'].split('::')
+    q2_vars = _pop_strip(os.environ.copy(), 'Q2_')
+    if '::' in q2_vars['ACTION']:
+        result['plugin'], result['action'] = os.environ['ACTION'].split('::')
+        del q2_vars['ACTION']
 
-    result['inputs'] = _split_values(_environ_search_strip('Q2_I_'), ' ')
 
-    result['params'] = _split_values(_environ_search_strip('Q2_P_'), ' ')
-    result['metadata'] = _split_values(_environ_search_strip('Q2_M_'), ' ')
-    result['columns'] = _split_values(_environ_search_strip('Q2_C_'), '::')
+    result['inputs'] = _split_values(_pop_strip(q2_vars, 'I_'), ' ')
 
-    result['outputs'] = _environ_search_strip('Q2_O_')
+    result['params'] = _split_values(_pop_strip(q2_vars, 'P_'), ' ')
+    result['metadata'] = _split_values(_pop_strip(q2_vars, 'M_'), ' ')
+    result['columns'] = _split_values(_pop_strip(q2_vars, 'C_'), '::')
+
+    result['outputs'] = _pop_strip(q2_vars, 'O_')
+
+    result.update({k.lower(): v for k, v  in q2_vars.items()})
 
     return result
 
@@ -76,9 +82,13 @@ def get_working_dir():
     return os.environ['WORKDIR']
 
 
-def _environ_search_strip(search):
-    return {k.lstrip(search):v
-            for k,v in os.environ.items() if k.startswith(search)}
+def _pop_strip(mapping, search):
+    popped = {}
+    for key, value in list(mapping.items()):
+        if key.startswith(search):
+            popped[key.lstrip(search)] = value
+            del mapping[key] 
+    return popped
 
 
 def _split_values(dict_, delimiter):

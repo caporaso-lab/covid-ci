@@ -13,7 +13,7 @@ resources:
 
   - name: metadata-upload
     type: simple-remote-directory-resource
-    check_every: 1m
+    check_every: 5m
     source:
       hostname: ((hostname))
       username: ((username))
@@ -30,6 +30,26 @@ resources:
       private_key: ((private_key))
       key_type: ((key_type))
       path: ((path_tabulated_metadata))
+
+  - name: import-upload
+    type: simple-remote-directory-resource
+    check_every: 5m
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_import_upload))
+
+  - name: import-result
+    type: simple-remote-directory-resource
+    check_every: 5m
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_import_result))
 
 jobs:
   - name: tabulate-metadata
@@ -52,7 +72,7 @@ jobs:
           Q2_O_visualization: ((path_tabulated_metadata))
 
           SLURM_cpus_per_task: 1
-          SLURM_time: 1:00:00
+          SLURM_time: 0:05:00
           SLURM_mem: 4096
 
         input_mapping:
@@ -60,3 +80,35 @@ jobs:
       - put: tabulated-metadata
         params:
           source: outputs/visualization/
+
+  - name: import-test
+    public: true
+    plan:
+      - get: covid-ci
+      - get: import-upload
+        trigger: true
+      - task: import_test
+        file: covid-ci/tasks/execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: import
+          Q2_INPUT: input1
+          Q2_TYPE: FeatureData[Frequency]
+          Q2_FORMAT:
+          Q2_OUTPUT: ((path_import_result))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:05:00
+          SLURM_mem: 4096
+
+        input_mapping:
+          input1: import-upload
+      - put: import-result
+        params:
+          source: outputs/
+
