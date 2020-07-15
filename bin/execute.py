@@ -33,7 +33,7 @@ if 'plugin' in q2_vars:
                                         action=q2_vars['action']))
     job_name = '%s::%s' % (q2_vars['plugin'], q2_vars['action'])
 elif q2_vars['action'] == 'import':
-    input_ = q2_vars['input']
+    input_ = common.deref(q2_vars['input'])
     type_ = q2_vars['type']
 
     if 'format' in q2_vars:
@@ -48,7 +48,7 @@ elif q2_vars['action'] == 'import':
                                          format_=format_, output=output))
     job_name = 'import'
 elif q2_vars['action'] == 'export':
-    input_ = q2_vars['input']
+    input_ = common.deref(q2_vars['input'])
 
     if 'format' in q2_vars:
         format_ = q2_vars['format']
