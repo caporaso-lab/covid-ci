@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import json
 import qiime2
 
 artifact = qiime2.Artifact.import_data('{{ type_ }}', '{{ input_ }}',
