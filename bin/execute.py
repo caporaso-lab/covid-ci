@@ -70,6 +70,9 @@ with common.make_client_from_env() as client:
                     print(line, end='')
             except IOError:
                 pass
+
+    for line in stdout_fh:
+        print(line, end='')
     stdout_fh.close()
 
     error_code = channel.recv_exit_status()
