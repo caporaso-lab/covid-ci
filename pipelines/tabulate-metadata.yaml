@@ -139,7 +139,7 @@ jobs:
 
           Q2_ACTION: export
           Q2_INPUT: input1
-          Q2_FORMAT: BIOMV100Format
+          Q2_FORMAT: BIOMV210Format
           Q2_EXT: .biom
           Q2_OUTPUT: ((path_export_result))
 
