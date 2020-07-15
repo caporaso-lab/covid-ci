@@ -99,7 +99,6 @@ jobs:
           Q2_ACTION: import
           Q2_INPUT: input1
           Q2_TYPE: FeatureData[Frequency]
-          Q2_FORMAT:
           Q2_OUTPUT: ((path_import_result))
 
           SLURM_cpus_per_task: 1
@@ -110,5 +109,5 @@ jobs:
           input1: import-upload
       - put: import-result
         params:
-          source: outputs/
+          source: outputs/result/
 
