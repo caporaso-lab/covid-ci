@@ -91,3 +91,6 @@ with common.make_client_from_env() as client:
             os.mkdir(outdir)
             with open(os.path.join(outdir, 'reference.link'), 'w') as fh:
                 fh.write(path)
+
+
+    sftp.rmdir(job_dir)
