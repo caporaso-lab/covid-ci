@@ -8,34 +8,8 @@ from qiime2.sdk.util import parse_primitive
 
 import qiime2.plugins.{{ plugin }}.actions as q2_{{ plugin }}
 
-concourse_args = {{ concourse_args }}
 
-pm = sdk.PluginManager()
-action = pm.get_plugin(id='{{ plugin }}').actions['{{ action }}']
-
-# generate kwargs after dereferencing QZAs and MD
-kwargs = {}
-
-_dereference_kwargs('params')
-_dereference_kwargs('metadata')
-_dereference_kwargs('columns')
-_dereference_kwargs('inputs')
-
-results = q2_{{ plugin }}.{{ action }}(**kwargs)
-
-manifest = {}
-
-for key, value in zip(results._fields, results):
-    uuid = str(value.uuid)
-    output_path = os.path.join(concourse_args['outputs'][key], uuid)
-    output_path = value.save(output_path)
-    manifest[key] = output_path
-
-with open(os.path.join(os.getcwd(), 'manifest.json'), 'w') as fh:
-    fh.write(json.dumps(manifest))
-
-
-def _dereference_kwargs(kwarg_type):
+def _dereference_kwargs(kwargs, kwarg_type):
     for param, spec in action.signature.parameters.items():
         if param not in concourse_args[kwarg_type]:
             continue
@@ -61,3 +35,30 @@ def _dereference_kwargs(kwarg_type):
                     loaded = qiime2.Artifact.load(arg)
 
         kwargs[param] = loaded
+
+
+concourse_args = {{ concourse_args }}
+
+pm = sdk.PluginManager()
+action = pm.get_plugin(id='{{ plugin }}').actions['{{ action }}']
+
+# generate kwargs after dereferencing QZAs and MD
+kwargs = {}
+
+_dereference_kwargs(kwargs, 'params')
+_dereference_kwargs(kwargs, 'metadata')
+_dereference_kwargs(kwargs, 'columns')
+_dereference_kwargs(kwargs, 'inputs')
+
+results = q2_{{ plugin }}.{{ action }}(**kwargs)
+
+manifest = {}
+
+for key, value in zip(results._fields, results):
+    uuid = str(value.uuid)
+    output_path = os.path.join(concourse_args['outputs'][key], uuid)
+    output_path = value.save(output_path)
+    manifest[key] = output_path
+
+with open(os.path.join(os.getcwd(), 'manifest.json'), 'w') as fh:
+    fh.write(json.dumps(manifest))
