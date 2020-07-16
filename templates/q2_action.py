@@ -17,41 +17,10 @@ action = pm.get_plugin(id='{{ plugin }}').actions['{{ action }}']
 # generate kwargs after dereferencing QZAs and MD
 kwargs = {}
 
-for param, spec in action.signature.parameters.items():
-    if param not in concourse_args['params']:
-        continue
-    arg = concourse_args['params'][param]
-    deserialized = parse_primitive(spec.qiime_type, arg)
-    kwargs[param] = deserialized
-
-for param, spec in action.signature.parameters.items():
-    if param not in concourse_args['metadata']:
-        continue
-    arg = concourse_args['metadata'][param]
-    if type(arg) is list:
-        loaded = [qiime2.Metadata.load(f) for f in arg]
-        loaded = loaded[0].merge(*loaded[1:])
-    else:
-        loaded = qiime2.Metadata.load(arg)
-    kwargs[param] = loaded
-
-for param, spec in action.signature.parameters.items():
-    if param not in concourse_args['columns']:
-        continue
-    file_, col = concourse_args['columns'][param]
-    loaded = qiime2.Metadata.load(file_).get_column(col)
-    kwargs[param] = loaded
-
-for param, spec in action.signature.parameters.items():
-    if param not in concourse_args['inputs']:
-        continue
-    arg = concourse_args['inputs'][param]
-    if type(arg) is list:
-        loaded = [qiime2.Artifact.load(f) for f in arg]
-    else:
-        loaded = qiime2.Artifact.load(arg)
-    kwargs[param] = loaded
-
+_dereference_kwargs('params')
+_dereference_kwargs('metadata')
+_dereference_kwargs('columns')
+_dereference_kwargs('inputs')
 
 results = q2_{{ plugin }}.{{ action }}(**kwargs)
 
@@ -65,3 +34,31 @@ for key, value in zip(results._fields, results):
 
 with open(os.path.join(os.getcwd(), 'manifest.json'), 'w') as fh:
     fh.write(json.dumps(manifest))
+
+
+def _dereference_kwargs(kwarg_type):
+    for param, spec in action.signature.parameters.items():
+        if param not in concourse_args[kwarg_type]:
+            continue
+
+        if kwarg_type == 'columns':
+            file_, col = concourse_args['columns'][param]
+            loaded = qiime2.Metadata.load(file_).get_column(col)
+        else:
+            arg = concourse_args[kwarg_type][param]
+
+            if kwarg_type == 'param':
+                loaded = parse_primitive(spec.qiime_type, arg)
+            elif kwarg_type == 'metadata':
+                if type(arg) is list:
+                    loaded = [qiime2.Metadata.load(f) for f in arg]
+                    loaded = loaded[0].merge(*loaded[1:])
+                else:
+                    loaded = qiime2.Metadata.load(arg)
+            elif kwarg_type == 'inputs':
+                if type(arg) is list:
+                    loaded = [qiime2.Artifact.load(f) for f in arg]
+                else:
+                    loaded = qiime2.Artifact.load(arg)
+
+        kwargs[param] = loaded
