@@ -125,7 +125,7 @@ jobs:
 
           SLURM_cpus_per_task: 1
           SLURM_time: 0:20:00
-          SLURM_mem: 4096
+          SLURM_mem: 16384
 
         input_mapping:
           input1: upload-gisaid
@@ -152,7 +152,7 @@ jobs:
           Q2_ACTION: 'genome_sampler::filter_seqs'
           Q2_I_sequences: 'input1'
           Q2_P_min_length: 20000
-          Q2_O_filtered_sequences: ((path_gisaid_filtered_seqs))
+          Q2_O_filtered_sequences: ((path_filtered_seqs_gisaid))
 
           SLURM_cpus_per_task: 1
           SLURM_time: 0:40:00

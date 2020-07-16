@@ -9,8 +9,8 @@ from qiime2.sdk.util import parse_primitive
 import qiime2.plugins.{{ plugin }}.actions as q2_{{ plugin }}
 
 
-def _dereference_kwargs(kwargs, kwarg_type):
-    for param, spec in action.signature.parameters.items():
+def _dereference_kwargs(kwargs, kwarg_type, ref):
+    for param, spec in ref.items():
         if param not in concourse_args[kwarg_type]:
             continue
 
@@ -45,10 +45,10 @@ action = pm.get_plugin(id='{{ plugin }}').actions['{{ action }}']
 # generate kwargs after dereferencing QZAs and MD
 kwargs = {}
 
-_dereference_kwargs(kwargs, 'params')
-_dereference_kwargs(kwargs, 'metadata')
-_dereference_kwargs(kwargs, 'columns')
-_dereference_kwargs(kwargs, 'inputs')
+_dereference_kwargs(kwargs, 'params', action.signature.parameters)
+_dereference_kwargs(kwargs, 'metadata', action.signature.parameters)
+_dereference_kwargs(kwargs, 'columns', action.signature.parameters)
+_dereference_kwargs(kwargs, 'inputs', action.signature.inputs)
 
 results = q2_{{ plugin }}.{{ action }}(**kwargs)
 
