@@ -157,7 +157,7 @@ jobs:
           SLURM_cpus_per_task: 1
           SLURM_time: 0:40:00
           SLURM_mem: 4096
-          
+
         input_mapping:
           input1: seqs-gisaid
       - put: filtered-seqs-gisaid
@@ -182,12 +182,12 @@ jobs:
 
           Q2_ACTION: 'feature_table::tabulate_seqs'
           Q2_I_data: 'input1'
-          Q2_O_visualization: ((path_gisaid_filtered_seqs))
+          Q2_O_visualization: ((path_filtered_seqs_gisaid))
 
           SLURM_cpus_per_task: 1
           SLURM_time: 0:30:00
           SLURM_mem: 4096
-          
+
         input_mapping:
           input1: filtered-seqs-gisaid
       - put: view-seqs-gisaid
@@ -218,7 +218,7 @@ jobs:
           SLURM_cpus_per_task: 1
           SLURM_time: 0:20:00
           SLURM_mem: 4096
-    
+
         input_mapping:
           input1: upload-az-tgen
       - put: seqs-az-tgen
