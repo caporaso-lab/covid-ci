@@ -20,7 +20,7 @@ def _dereference_kwargs(kwargs, kwarg_type, ref):
         else:
             arg = concourse_args[kwarg_type][param]
 
-            if kwarg_type == 'param':
+            if kwarg_type == 'params':
                 loaded = parse_primitive(spec.qiime_type, arg)
             elif kwarg_type == 'metadata':
                 if type(arg) is list:
