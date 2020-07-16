@@ -11,7 +11,7 @@ resources:
       uri: https://github.com/caporaso-lab/covid-ci
       branch: master
 
-  - name: gisaid-upload
+  - name: upload-gisaid
     type: simple-remote-directory-resource
     check_every: 1m
     source:
@@ -19,9 +19,9 @@ resources:
       username: ((username))
       private_key: ((private_key))
       key_type: ((key_type))
-      path: ((path_gisaid_upload))
+      path: ((path_upload_gisaid))
 
-  - name: tgen-north-upload
+  - name: upload-az-tgen
     type: simple-remote-directory-resource
     check_every: 1m
     source:
@@ -29,9 +29,9 @@ resources:
       username: ((username))
       private_key: ((private_key))
       key_type: ((key_type))
-      path: ((path_tgen_north_upload))
+      path: ((path_upload_az_tgen))
 
-  - name: ua-upload
+  - name: upload-az-other
     type: simple-remote-directory-resource
     check_every: 1m
     source:
@@ -39,9 +39,9 @@ resources:
       username: ((username))
       private_key: ((private_key))
       key_type: ((key_type))
-      path: ((path_ua_upload))
+      path: ((path_upload_az_other))
 
-  - name: gisaid-seqs
+  - name: seqs-gisaid
     type: simple-remote-directory-resource
     check_every: 48h
     source:
@@ -49,9 +49,9 @@ resources:
       username: ((username))
       private_key: ((private_key))
       key_type: ((key_type))
-      path: ((path_gisaid_seqs))
+      path: ((path_seqs_gisaid))
 
-  - name: tgen-north-seqs
+  - name: seqs-az-tgen
     type: simple-remote-directory-resource
     check_every: 48h
     source:
@@ -59,9 +59,9 @@ resources:
       username: ((username))
       private_key: ((private_key))
       key_type: ((key_type))
-      path: ((path_tgen_north_seqs))
+      path: ((path_seqs_az_tgen))
 
-  - name: ua-seqs
+  - name: seqs-az-other
     type: simple-remote-directory-resource
     check_every: 48h
     source:
@@ -69,41 +69,76 @@ resources:
       username: ((username))
       private_key: ((private_key))
       key_type: ((key_type))
-      path: ((path_ua_seqs))
+      path: ((path_seqs_az_other))
+
+  - name: seqs-az-focal
+    type: simple-remote-directory-resource
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_seqs_az_focal))
+
+  - name: filtered-seqs-gisaid
+    type: simple-remote-directory-resource
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_filtered_seqs_gisaid))
+
+  - name: view-seqs-gisaid
+    type: simple-remote-directory-resource
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_view_seqs_gisaid))
 
 jobs:
   - name: import-gisaid
     public: true
     plan:
       - get: covid-ci
-      - get: gisaid-upload
+      - get: upload-gisaid
         trigger: true
       - task: import-gisaid
-        file: covid-ci/tasks/import.yaml
+        file: covid-ci/tasks/execute1.yaml
         params:
-          EXTERNAL_RESOURCE_DIR: ((path_gisaid_seqs))
           HOSTNAME: ((hostname))
           USERNAME: ((username))
           PRIVATE_KEY: ((private_key))
           KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: import
+          Q2_INPUT: input1
+          Q2_FORMAT: GISAIDDNAFASTAFormat
+          Q2_TYPE: FeatureData[Sequence]
+          Q2_OUTPUT: ((path_seqs_gisaid))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:20:00
+          SLURM_mem: 4096
+
         input_mapping:
-          input_dir: gisaid-upload
-        output_mapping:
-          output_dir: gisaid-seqs
-        on_failure:
-          task: report-error
-          file: covid-ci/tasks/complain.yaml
-          params:
-            EMAIL: ((email_gisaid))
-      - put: gisaid-seqs
+          input1: upload-gisaid
+      - put: seqs-gisaid
         params:
-          source: gisaid-seqs/
+          source: outputs/result/
 
   - name: filter-gisaid
     public: true
     plan:
       - get: covid-ci
-      - get: gisaid-seqs
+      - get: seqs-gisaid
+        passed: [import-gisaid]
         trigger: true
       - task: filter-gisaid
         file: covid-ci/tasks/execute1.yaml
@@ -112,73 +147,141 @@ jobs:
           USERNAME: ((username))
           PRIVATE_KEY: ((private_key))
           KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
 
           Q2_ACTION: 'genome_sampler::filter_seqs'
           Q2_I_sequences: 'input1'
           Q2_P_min_length: 20000
           Q2_O_filtered_sequences: ((path_gisaid_filtered_seqs))
 
-          SLURM_mem: 12000
-
-         # Q2_C_example: '((path_md))::Some_Col'
-         # Q2_M_other: '((path_md1)) ((path_md2))'
-
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:40:00
+          SLURM_mem: 4096
+          
         input_mapping:
-          input1: gisaid-seqs
-      - put: gisaid-filtered-seqs
+          input1: seqs-gisaid
+      - put: filtered-seqs-gisaid
         params:
           source: output/filtered_sequences/
 
-  - name: import-tgen-north
+  - name: view-gisaid
     public: true
     plan:
       - get: covid-ci
-      - get: tgen-north-upload
+      - get: filtered-seqs-gisaid
+        passed: [filter-gisaid]
         trigger: true
-      - task: import-tgen-north
-        file: covid-ci/tasks/import.yaml
+      - task: view-gisaid
+        file: covid-ci/tasks/execute1.yaml
         params:
-          EXTERNAL_RESOURCE_DIR: ((path_tgen_north_seqs))
           HOSTNAME: ((hostname))
           USERNAME: ((username))
           PRIVATE_KEY: ((private_key))
           KEY_TYPE: ((key_type))
-        input_mapping:
-          input_dir: tgen-north-upload
-        output_mapping:
-          output_dir: tgen-north-seqs
-        on_failure:
-          task: report-error
-          file: covid-ci/tasks/complain.yaml
-          params:
-            EMAIL: ((email_tgen_north))
-      - put: tgen-north-seqs
-        params:
-          source: tgen-north-seqs/
+          WORKDIR: ((workdir))
 
-  - name: import-ua
+          Q2_ACTION: 'feature_table::tabulate_seqs'
+          Q2_I_data: 'input1'
+          Q2_O_visualization: ((path_gisaid_filtered_seqs))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:30:00
+          SLURM_mem: 4096
+          
+        input_mapping:
+          input1: filtered-seqs-gisaid
+      - put: view-seqs-gisaid
+        params:
+          source: output/visualization/
+
+  - name: import-az-tgen
     public: true
     plan:
       - get: covid-ci
-      - get: ua-upload
+      - get: upload-az-tgen
         trigger: true
-      - task: import-ua
-        file: covid-ci/tasks/import.yaml
+      - task: import-az-tgen
+        file: covid-ci/tasks/execute1.yaml
         params:
-          EXTERNAL_RESOURCE_DIR: ((path_ua_seqs))
           HOSTNAME: ((hostname))
           USERNAME: ((username))
           PRIVATE_KEY: ((private_key))
           KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: import
+          Q2_INPUT: input1
+          Q2_FORMAT: GISAIDDNAFASTAFormat
+          Q2_TYPE: FeatureData[Sequence]
+          Q2_OUTPUT: ((path_seqs_az_tgen))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:20:00
+          SLURM_mem: 4096
+    
         input_mapping:
-          input_dir: ua-upload
-        output_mapping:
-          output_dir: ua-seqs
-        on_failure:
-          task: report-error
-          file: covid-ci/tasks/complain.yaml
-          params:
-            EMAIL: ((email_ua))
-      - put: ua-seqs
+          input1: upload-az-tgen
+      - put: seqs-az-tgen
         params:
-          source: ua-seqs/
+          source: output/result/
+
+  - name: import-az-other
+    public: true
+    plan:
+      - get: covid-ci
+      - get: upload-az-other
+        trigger: true
+      - task: import-az-other
+        file: covid-ci/tasks/execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: import
+          Q2_INPUT: input1
+          Q2_FORMAT: GISAIDDNAFASTAFormat
+          Q2_TYPE: FeatureData[Sequence]
+          Q2_OUTPUT: ((path_seqs_az_other))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:20:00
+          SLURM_mem: 4096
+
+        input_mapping:
+          input1: upload-az-other
+      - put: seqs-az-other
+        params:
+          source: output/result/
+
+  - name: merge-focal-seqs
+    public: true
+    plan:
+      - get: covid-ci
+      - get: seqs-az-tgen
+        passed: [import-az-tgen]
+        trigger: true
+      - get: seqs-az-other
+        passed: [import-az-other]
+        trigger: true
+      - task: merge-focal-seqs
+        file: covid-ci/tasks/execute2.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: 'feature_table::merge_seqs'
+          Q2_I_sequences: 'input1 input2'
+          Q2_O_merged_data: ((path_seqs_az_focal))
+
+        input_mapping:
+          input1: seqs-az-tgen
+          input2: seqs-az-other
+      - put: seqs-az-focal
+        params:
+          source: output/merged_data/
