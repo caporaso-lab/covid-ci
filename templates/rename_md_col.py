@@ -11,4 +11,4 @@ path = os.path.join('{{ output }}', os.path.basename(input_))
 df.to_csv(path, sep='\t')
 
 with open(os.path.join(os.getcwd(), 'manifest.json'), 'w') as fh:
-    fh.write(json.dumps({'result': path))
+    fh.write(json.dumps({'result': path}))
