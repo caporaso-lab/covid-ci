@@ -57,7 +57,6 @@ manifest = {}
 for key, value in zip(results._fields, results):
     uuid = str(value.uuid)
     output_path = os.path.join(concourse_args['outputs'][key], uuid)
-    output_path = os.path.abspath(output_path)
     output_path = value.save(output_path)
     manifest[key] = output_path
 
