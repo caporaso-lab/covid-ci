@@ -3,11 +3,12 @@ import os
 
 import pandas as pd
 
-
-df = pd.read_csv('{{ input }}', sep='\t')
+input_ = '{{ input }}'
+df = pd.read_csv(input_, sep='\t')
 df = df.rename(columns={'strain': 'id'})
 
-df.to_csv('{{ output }}', sep='\t')
+path = os.path.join('{{ output }}', os.path.basename(input_))
+df.to_csv(path, sep='\t')
 
 with open(os.path.join(os.getcwd(), 'manifest.json'), 'w') as fh:
-    fh.write(json.dumps({'result': '{{ output }}'}))
+    fh.write(json.dumps({'result': path))
