@@ -61,7 +61,6 @@ def get_slurm_environment_variables():
 
 def get_script_variables():
     vars_ = _pop_strip(os.environ.copy(), 'SCRIPT_')
-    print(vars_)
     deref = _pop_strip(vars_, 'I_')
     return deref, vars_ 
 
@@ -95,7 +94,8 @@ def _pop_strip(mapping, search):
     popped = {}
     for key, value in list(mapping.items()):
         if key.startswith(search):
-            popped[key.lstrip(search)] = value
+            stripped_key = key[len(search):]
+            popped[stripped_key] = value
             del mapping[key]
     return popped
 
