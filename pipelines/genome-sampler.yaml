@@ -101,7 +101,7 @@ resources:
       key_type: ((key_type))
       path: ((path_seqs_az_focal))
 
-  - name: filtered-seqs-gisaid
+  - name: seqs-gisaid-context
     type: simple-remote-directory-resource
     check_every: 48h
     source:
@@ -109,7 +109,7 @@ resources:
       username: ((username))
       private_key: ((private_key))
       key_type: ((key_type))
-      path: ((path_filtered_seqs_gisaid))
+      path: ((path_seqs_gisaid_context))
 
   - name: view-seqs-gisaid
     type: simple-remote-directory-resource
@@ -120,6 +120,46 @@ resources:
       private_key: ((private_key))
       key_type: ((key_type))
       path: ((path_view_seqs_gisaid))
+
+  - name: selection-longitudinal
+    type: simple-remote-directory-resource
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_selection_longitudinal))
+
+  - name: selection-diversity
+    type: simple-remote-directory-resource
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_selection_diversity))
+
+  - name: selection-neighbors
+    type: simple-remote-directory-resource
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_selection_neighbors))
+
+  - name: view-selections
+    type: simple-remote-directory-resource
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_view_selections))
 
 jobs:
   - name: import-gisaid
@@ -215,6 +255,8 @@ jobs:
         input_mapping:
           input1: seqs-gisaid
           input2: cleaned-metadata-gisaid
+        output_mapping:
+          outputs: subset
 
       - task: filter-gisaid
         file: covid-ci/tasks/execute1.yaml
@@ -228,15 +270,15 @@ jobs:
           Q2_ACTION: genome_sampler::filter_seqs
           Q2_I_sequences: input1
           Q2_P_min_length: 20000
-          Q2_O_filtered_sequences: ((path_filtered_seqs_gisaid))
+          Q2_O_filtered_sequences: ((path_seqs_gisaid_context))
 
           SLURM_cpus_per_task: 1
           SLURM_time: 0:30:00
           SLURM_mem: 4096
 
         input_mapping:
-          input1: outputs/filtered_data
-      - put: filtered-seqs-gisaid
+          input1: subset
+      - put: seqs-gisaid-context
         params:
           source: outputs/filtered_sequences/
 
@@ -244,7 +286,7 @@ jobs:
     public: true
     plan:
       - get: covid-ci
-      - get: filtered-seqs-gisaid
+      - get: seqs-gisaid-context
         passed: [filter-gisaid]
         trigger: true
       - task: view-gisaid
@@ -265,7 +307,7 @@ jobs:
           SLURM_mem: 16384
           
         input_mapping:
-          input1: filtered-seqs-gisaid
+          input1: seqs-gisaid-context
       - put: view-seqs-gisaid
         params:
           source: outputs/visualization/
@@ -355,6 +397,10 @@ jobs:
           Q2_I_data: input1 input2
           Q2_O_merged_data: ((path_seqs_az_focal))
 
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:20:00
+          SLURM_mem: 4096
+
         input_mapping:
           input1: seqs-az-tgen
           input2: seqs-az-other
@@ -362,13 +408,153 @@ jobs:
         params:
           source: outputs/merged_data/
 
-    # - name: sample-longitudinal
+  - name: sample-longitudinal
+    public: true
+    plan:
+      - get: covid-ci
+      - get: seqs-gisaid-context
+        passed: [filter-gisaid]
+        trigger: true
+      - get: cleaned-metadata-gisaid
+        passed: [clean-metadata]
+        trigger: true
+      - task: sample-longitudinal
+        file: covid-ci/tasks/execute2.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
 
-    # - name: sample-diversity
+          Q2_ACTION: genome_sampler::sample_longitudinal
+          Q2_I_context_seqs: input1
+          Q2_P_start_date: 2019-12
+          Q2_P_samples_per_interval: 7
+          Q2_P_days_per_interval: 7
+          Q2_C_dates_column: input2::date
+          Q2_O_selection: ((path_selection_longitudinal))
 
-    # - name: sample-neighbors
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:20:00
+          SLURM_mem: 4096
 
-    # - name: summarize-selections
+        input_mapping:
+          input1: seqs-gisaid-context
+          input2: cleaned-metadata-gisaid
+      - put: selection-longitudinal
+        params:
+          source: outputs/selection/
+
+  - name: sample-diversity
+    public: true
+    plan:
+      - get: covid-ci
+      - get: seqs-gisaid-context
+        passed: [filter-gisaid]
+        trigger: true
+      - task: sample-diversity
+        file: covid-ci/tasks/execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: genome_sampler::sample_diversity
+          Q2_I_context_seqs: input1
+          Q2_P_percent_id: .999
+          Q2_P_n_threads: 24
+          Q2_O_selection: ((path_selection_diversity))
+
+          SLURM_cpus_per_task: 24
+          SLURM_time: 48:00:00
+          SLURM_mem: 65536
+        
+        input_mapping:
+          input1: seqs-gisaid-context
+      - put: selection-diversity
+        params:
+          source: outputs/selection/
+
+  - name: sample-neighbors
+    public: true
+    plan:
+      - get: covid-ci
+      - get: seqs-gisaid-context
+        passed: [filter-gisaid]
+        trigger: true
+      - get: seqs-az-focal
+        passed: [merge-focal-seqs]
+        trigger: true
+      - task: sample-neighbors
+        file: covid-ci/tasks/execute3.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: genome_sampler::sample_neighbors
+          Q2_I_focal_seqs: input1
+          Q2_I_context_seqs: input2
+          Q2_C_locale_column: input3::division
+          Q2_P_percent_id: .9999
+          Q2_P_samples_per_cluster: 3
+          Q2_P_n_threads: 24
+          Q2_O_selection: ((path_selection_neighbors))
+
+          SLURM_cpus_per_task: 24
+          SLURM_time: 24:00:00
+          SLURM_mem: 65536
+
+        input_mapping:
+          input1: seqs-gisaid-context
+          input2: seqs-az-focal
+          input3: cleaned-metadata-gisaid
+      - put: selection-neighbors
+        params:
+          source: outputs/selection/
+
+  - name: summarize-selections
+    public: true
+    plan:
+      - get: covid-ci
+      - get: selection-longitudinal
+        passed: [sample-longitudinal]
+        trigger: true
+      - get: selection-diversity
+        passed: [sample-diversity]
+        trigger: true
+      - get: selection-neighbors
+        passed: [sample-neighbors]
+        trigger: true
+      - task: summarize-selection
+        file: covid-ci/tasks/execute3.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: genome_sampler::summarize_selections
+          Q2_I_selections: input1 input2 input 3
+          Q2_O_visualization: ((path_view_selections))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:20:00
+          SLURM_mem: 4096
+        
+        input_mapping:
+          input1: selection-longitudinal
+          input2: selection-diversity
+          input3: selection-neighbors
+      - put: view-selections
+        params:
+          source: outputs/visualization
 
     # - name: combine-selections
 
