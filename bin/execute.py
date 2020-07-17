@@ -16,7 +16,7 @@ if 'SCRIPT' in os.environ:
     template = common.get_template(os.environ['SCRIPT'])
     deref, vars = common.get_script_variables()
     deref = common.deref_block(deref)
-    script = io.StringIO(template.render(**vars, **deref)
+    script = io.StringIO(template.render(**vars, **deref))
     job_name = os.environ['SCRIPT']
 elif 'plugin' in q2_vars:
     # 2. Dereference reference.link inputs into artifact FPs and metadata FPs
@@ -122,7 +122,7 @@ with common.make_client_from_env() as client:
     if error_code:
         print('There was an error completing the job.')
         sys.exit(error_code)
-        
+
 # 6. If successful, transfer the output manifest and write out reference.link
 #    files
 
