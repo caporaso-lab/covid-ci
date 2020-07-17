@@ -9,7 +9,7 @@ df = pd.read_csv(input_, sep='\t')
 df = df.rename(columns={'strain': 'id'})
 
 path = os.path.join('{{ output }}', os.path.basename(input_))
-df.to_csv(path, sep='\t')
+df.to_csv(path, sep='\t', index=False)
 
 with open(os.path.join(os.getcwd(), 'manifest.json'), 'w') as fh:
     fh.write(json.dumps({'result': path}))
