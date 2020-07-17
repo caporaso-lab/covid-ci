@@ -122,6 +122,7 @@ with common.make_client_from_env() as client:
     if error_code:
         print('There was an error completing the job.')
         sys.exit(error_code)
+        
 # 6. If successful, transfer the output manifest and write out reference.link
 #    files
 

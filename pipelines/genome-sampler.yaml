@@ -167,7 +167,7 @@ jobs:
           USERNAME: ((username))
           PRIVATE_KEY: ((private_key))
           KEY_TYPE: ((key_type))
-          WORKDIR: ((workdir)
+          WORKDIR: ((workdir))
           
           SCRIPT: rename_md_col.py
           SCRIPT_I_input: input1
