@@ -161,7 +161,7 @@ jobs:
       - get: upload-metadata-gisaid
         trigger: true
       - task: clean-metadata
-        file: execute1.yaml
+        file: covid-ci/tasks/execute1.yaml
         params:
           HOSTNAME: ((hostname))
           USERNAME: ((username))
