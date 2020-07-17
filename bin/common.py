@@ -123,6 +123,10 @@ def deref_block(block):
 
 
 def deref(fp):
+    contents = os.listdir(fp)
+    if len(contents) == 1 and contents[0] != 'reference.link':
+        fp = os.path.join(fp, contents[0])
+
     with open(os.path.join(fp, 'reference.link')) as fh:
         return fh.readline()
 
