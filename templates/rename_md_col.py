@@ -5,7 +5,7 @@ import pandas as import pd
 
 
 df = pd.read_csv('{{ input }}', sep='\t')
-df = df.rename(columns={'strain':'id'})
+df = df.rename(columns={'strain': 'id'})
 
 df.to_csv('{{ output }}', sep='\t')
 

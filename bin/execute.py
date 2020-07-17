@@ -10,68 +10,70 @@ import common
 
 
 # 1. fetch variables
-q2_vars = common.get_q2_environment_variables()
-
 if 'SCRIPT' in os.environ:
     template = common.get_template(os.environ['SCRIPT'])
     deref, vars = common.get_script_variables()
     deref = common.deref_block(deref)
     script = io.StringIO(template.render(**vars, **deref))
     job_name = os.environ['SCRIPT']
-elif 'plugin' in q2_vars:
-    # 2. Dereference reference.link inputs into artifact FPs and metadata FPs
-    dereferenced = {}
-    dereferenced['inputs'] = common.deref_block(q2_vars['inputs'])
-    dereferenced['metadata'] = common.deref_block(q2_vars['metadata'])
-    dereferenced['columns'] = {
-        k: [common.deref(md), c] for k, (md, c) in q2_vars['columns']}
-    dereferenced['params'] = q2_vars['params']
-    dereferenced['outputs'] = q2_vars['outputs']
-
-    # 3. Template inputs and action into a Python script. Loading the
-    #    monsoon paths and primitives (which are strings) will occur inside of
-    #    this templated script. The script should also generate an output manifest
-    #    for consumption on bacon
-
-    template = common.get_template('q2_action.py')
-    script = io.StringIO(template.render(concourse_args=dereferenced,
-                                         plugin=q2_vars['plugin'],
-                                         action=q2_vars['action']))
-    job_name = '%s::%s' % (q2_vars['plugin'], q2_vars['action'])
-elif q2_vars['action'] == 'import':
-    input_ = common.deref(q2_vars['input'])
-    type_ = q2_vars['type']
-
-    if 'format' in q2_vars:
-        format_ = repr(q2_vars['format'])
-    else:
-        format_ = None
-
-    output = q2_vars['output']
-
-    template = common.get_template('q2_import.py')
-    script = io.StringIO(template.render(input_=input_, type_=type_,
-                                         format_=format_, output=output))
-    job_name = 'import'
-elif q2_vars['action'] == 'export':
-    input_ = common.deref(q2_vars['input'])
-
-    if 'format' in q2_vars:
-        format_ = repr(q2_vars['format'])
-    else:
-        format_ = None
-
-    ext = q2_vars['ext']
-    output = q2_vars['output']
-
-    template = common.get_template('q2_export.py')
-    script = io.StringIO(template.render(input_=input_, format_=format_,
-                                         ext=ext, output=output))
-    job_name = 'export'
-elif q2_vars:
-    raise Exception(f"unrecognized action {q2_vars['action']}")
 else:
-    raise Exception("Nothing to do.")
+    q2_vars = common.get_q2_environment_variables()
+
+    if 'plugin' in q2_vars:
+        # 2. Dereference reference.link inputs into artifact FPs and metadata
+        #    FPs
+        dereferenced = {}
+        dereferenced['inputs'] = common.deref_block(q2_vars['inputs'])
+        dereferenced['metadata'] = common.deref_block(q2_vars['metadata'])
+        dereferenced['columns'] = {
+            k: [common.deref(md), c] for k, (md, c) in q2_vars['columns']}
+        dereferenced['params'] = q2_vars['params']
+        dereferenced['outputs'] = q2_vars['outputs']
+
+        # 3. Template inputs and action into a Python script. Loading the
+        #    monsoon paths and primitives (which are strings) will occur inside
+        #    of this templated script. The script should also generate an
+        #    output manifest for consumption on bacon
+
+        template = common.get_template('q2_action.py')
+        script = io.StringIO(template.render(concourse_args=dereferenced,
+                                            plugin=q2_vars['plugin'],
+                                            action=q2_vars['action']))
+        job_name = '%s::%s' % (q2_vars['plugin'], q2_vars['action'])
+    elif q2_vars['action'] == 'import':
+        input_ = common.deref(q2_vars['input'])
+        type_ = q2_vars['type']
+
+        if 'format' in q2_vars:
+            format_ = repr(q2_vars['format'])
+        else:
+            format_ = None
+
+        output = q2_vars['output']
+
+        template = common.get_template('q2_import.py')
+        script = io.StringIO(template.render(input_=input_, type_=type_,
+                                            format_=format_, output=output))
+        job_name = 'import'
+    elif q2_vars['action'] == 'export':
+        input_ = common.deref(q2_vars['input'])
+
+        if 'format' in q2_vars:
+            format_ = repr(q2_vars['format'])
+        else:
+            format_ = None
+
+        ext = q2_vars['ext']
+        output = q2_vars['output']
+
+        template = common.get_template('q2_export.py')
+        script = io.StringIO(template.render(input_=input_, format_=format_,
+                                            ext=ext, output=output))
+        job_name = 'export'
+    elif q2_vars:
+        raise Exception(f"unrecognized action {q2_vars['action']}")
+    else:
+        raise Exception("Nothing to do.")
 
 # 4. Use paramiko to transfer the templated script
 
