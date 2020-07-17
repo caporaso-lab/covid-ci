@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
 
-import pandas as import pd
+import pandas as pd
 
 
 df = pd.read_csv('{{ input }}', sep='\t')
