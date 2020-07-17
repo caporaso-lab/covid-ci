@@ -101,6 +101,16 @@ resources:
       key_type: ((key_type))
       path: ((path_seqs_az_focal))
 
+  - name: seqs-gisaid-matched
+    type: simple-remote-directory-resource
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_seqs_gisaid_matched))
+
   - name: seqs-gisaid-context
     type: simple-remote-directory-resource
     check_every: 48h
@@ -160,6 +170,46 @@ resources:
       private_key: ((private_key))
       key_type: ((key_type))
       path: ((path_view_selections))
+
+  - name: selection-final
+    type: simple-remote-directory-resource
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_selection_final))
+
+  - name: subsampled-gisaid-context
+    type: simple-remote-directory-resource
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_subsampled_gisaid_context))
+      
+  - name: seqs-final
+    type: simple-remote-directory-resource
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_seqs_final))
+
+  - name: seqs-final-fasta
+    type: simple-remote-directory-resource
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_seqs_final_fasta))
 
 jobs:
   - name: import-gisaid
@@ -224,7 +274,7 @@ jobs:
         params:
           source: outputs/result/
 
-  - name: filter-gisaid
+  - name: match-gisaid
     public: true
     plan:
       - get: covid-ci
@@ -246,7 +296,7 @@ jobs:
           Q2_ACTION: feature_table::filter_seqs
           Q2_I_data: input1
           Q2_M_metadata: input2
-          Q2_O_filtered_data: .
+          Q2_O_filtered_data: ((seqs_gisaid_matched))
 
           SLURM_cpus_per_task: 1
           SLURM_time: 0:30:00
@@ -255,9 +305,19 @@ jobs:
         input_mapping:
           input1: seqs-gisaid
           input2: cleaned-metadata-gisaid
-        output_mapping:
-          outputs: subset
+      - put: seqs-gisaid-matched
+        source: outputs/filtered_data/
 
+  - name: filter-gisaid
+    public: true
+    plan:
+      - get: covid-ci
+      - get: seqs-gisaid-matched
+        passed: [match-gisaid]
+        trigger: true
+      - get: cleaned-metadata-gisaid
+        passed: [clean-metadata]
+        trigger: true
       - task: filter-gisaid
         file: covid-ci/tasks/execute1.yaml
         params:
@@ -277,7 +337,7 @@ jobs:
           SLURM_mem: 4096
 
         input_mapping:
-          input1: subset
+          input1: seqs-gisaid-matched
       - put: seqs-gisaid-context
         params:
           source: outputs/filtered_sequences/
@@ -488,6 +548,9 @@ jobs:
       - get: seqs-az-focal
         passed: [merge-focal-seqs]
         trigger: true
+      - get: cleaned-metadata-gisaid
+        passed: [clean-metadata]
+        trigger: true
       - task: sample-neighbors
         file: covid-ci/tasks/execute3.yaml
         params:
@@ -531,7 +594,7 @@ jobs:
       - get: selection-neighbors
         passed: [sample-neighbors]
         trigger: true
-      - task: summarize-selection
+      - task: summarize-selections
         file: covid-ci/tasks/execute3.yaml
         params:
           HOSTNAME: ((hostname))
@@ -556,10 +619,141 @@ jobs:
         params:
           source: outputs/visualization
 
-    # - name: combine-selections
+  - name: combine-selections
+    public: true
+    plan:
+      - get: covid-ci
+      - get: selection-longitudinal
+        passed: [sample-longitudinal]
+        trigger: true
+      - get: selection-diversity
+        passed: [sample-diversity]
+        trigger: true
+      - get: selection-neighbors
+        passed: [sample-neighbors]
+        trigger: true
+      - task: combine-selections
+        file: covid-ci/tasks/execute3.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
 
-    # - name: filter-to-subsample
+          Q2_ACTION: genome_sampler::combine_selections
+          Q2_I_selections: input1 input2 input 3
+          Q2_O_combined_selection: ((path_selection_final))
 
-    # - name: merge-seqs
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:20:00
+          SLURM_mem: 4096
 
-    # - name: export
+        input_mapping:
+          input1: selection-longitudinal
+          input2: selection-diversity
+          input3: selection-neighbors
+      - put: selection-final
+        params:
+          source: outputs/combined_selection
+
+  - name: filter-to-subsample
+    public: true
+    plan:
+      - get: covid-ci
+      - get: seqs-gisaid-context
+        passed: [filter-gisaid]
+        trigger: true
+      - get: selection-final
+        passed: [combine-selections]
+        trigger: true
+      - task: filter-to-subsample
+        file: covid-ci/tasks/execute2.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: feature_table::filter_seqs
+          Q2_I_data: input1
+          Q2_M_metadata_file: input2
+          Q2_O_filtered_data: ((path_subsampled_gisaid_context))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:20:00
+          SLURM_mem: 16384
+
+        input_mapping:
+          input1: seqs-gisaid-context
+          input2: combined-selection
+      - put: subsampled-gisaid-context
+        params:
+          source: outputs/filtered_data/
+
+  - name: merge-seqs
+    public: true
+    plan:
+      - get: covid-ci
+      - get: seqs-az-focal
+        passed: [merge-focal-seqs]
+        trigger: true
+      - get: subsampled-gisaid-context
+        passed: [filter-to-subsample]
+        trigger: true
+      - task: filter-to-subsample
+        file: covid-ci/tasks/execute2.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: feature_table::merge_seqs
+          Q2_I_data: input1 input2
+          Q2_O_merged_data: ((path_seqs_final))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:20:00
+          SLURM_mem: 16384
+
+        input_mapping:
+          input1: seqs-az-focal
+          input2: subsampled-gisaid-context
+      - put: seqs-final
+        params:
+          source: outputs/merged_data/
+
+  - name: export
+    public: true
+    plan:
+      - get: covid-ci
+      - get: seqs-final
+        passed: [merge-seqs]
+        trigger: true
+      - task: export
+        file: covid-ci/tasks/execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: export
+          Q2_INPUT: input1
+          Q2_FORMAT: DNAFASTAFormat
+          Q2_EXT: .fasta
+          Q2_OUTPUT: ((path_seqs_final_fasta))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:20:00
+          SLURM_mem: 16384
+
+        input_mapping:
+          input1: seqs-final
+      - put: seqs-final-fasta
+        params:
+          source: outputs/result/
