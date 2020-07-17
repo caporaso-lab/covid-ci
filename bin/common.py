@@ -60,9 +60,9 @@ def get_slurm_environment_variables():
 
 
 def get_script_variables():
-    vars = _pop_strip(os.environ.copy(), 'SCRIPT_')
-    deref = _pop_strip(vars, 'I_')
-    return deref, vars 
+    vars_ = _pop_strip(os.environ.copy(), 'SCRIPT_')
+    deref = 'HI' #_pop_strip(vars_, 'I_')
+    return deref, vars_ 
 
 
 def get_q2_environment_variables():
