@@ -13,7 +13,9 @@ import common
 if 'SCRIPT' in os.environ:
     template = common.get_template(os.environ['SCRIPT'])
     deref, vars = common.get_script_variables()
+    print(deref, vars)
     deref = common.deref_block(deref)
+    print(deref)
     script = io.StringIO(template.render(**vars, **deref))
     job_name = os.environ['SCRIPT']
 else:

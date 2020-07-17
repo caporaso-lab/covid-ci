@@ -184,7 +184,6 @@ jobs:
         params:
           source: outputs/result/
 
-
   - name: filter-gisaid
     public: true
     plan:
