@@ -26,7 +26,8 @@ else:
         dereferenced['inputs'] = common.deref_block(q2_vars['inputs'])
         dereferenced['metadata'] = common.deref_block(q2_vars['metadata'])
         dereferenced['columns'] = {
-            k: [common.deref(md), c] for k, (md, c) in q2_vars['columns']}
+            k: [common.deref(md), c]
+            for k, (md, c) in q2_vars['columns'].items()}
         dereferenced['params'] = q2_vars['params']
         dereferenced['outputs'] = q2_vars['outputs']
 
