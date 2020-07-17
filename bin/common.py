@@ -5,6 +5,7 @@ import contextlib
 import paramiko
 import jinja2
 
+
 @contextlib.contextmanager
 def make_client(host, user, private_key):
     with paramiko.SSHClient() as client:
@@ -30,6 +31,7 @@ def make_client_from_env():
     key = make_key_from(pk, kt)
     with make_client(host, user, key) as client:
         yield client
+
 
 def get_template(name):
     path = os.path.join(os.path.dirname(__file__), '..', 'templates')
@@ -57,6 +59,12 @@ def get_slurm_environment_variables():
     return _pop_strip(os.environ.copy(), 'SLURM_')
 
 
+def get_script_variables():
+    vars = _pop_strip(os.environ.copy(), 'SCRIPT_')
+    deref = _pop_strip(vars, 'I_')
+    return deref, vars 
+
+
 def get_q2_environment_variables():
     result = {}
 
@@ -64,7 +72,6 @@ def get_q2_environment_variables():
     if '::' in q2_vars['ACTION']:
         result['plugin'], result['action'] = q2_vars['ACTION'].split('::')
         del q2_vars['ACTION']
-
 
     result['inputs'] = _split_values(_pop_strip(q2_vars, 'I_'), ' ')
 
@@ -77,6 +84,7 @@ def get_q2_environment_variables():
     result.update({k.lower(): v for k, v  in q2_vars.items()})
 
     return result
+
 
 def get_working_dir():
     return os.environ['WORKDIR']
@@ -116,6 +124,7 @@ def deref_block(block):
 def deref(fp):
     with open(os.path.join(fp, 'reference.link')) as fh:
         return fh.readline()
+
 
 def _listify(obj):
     is_list = True

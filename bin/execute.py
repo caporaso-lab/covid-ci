@@ -12,7 +12,13 @@ import common
 # 1. fetch variables
 q2_vars = common.get_q2_environment_variables()
 
-if 'plugin' in q2_vars:
+if 'SCRIPT' in os.environ:
+    template = common.get_template(os.environ['SCRIPT'])
+    deref, vars = common.get_script_variables()
+    deref = common.deref_block(deref)
+    script = io.StringIO(template.render(**vars, **deref)
+    job_name = os.environ['SCRIPT']
+elif 'plugin' in q2_vars:
     # 2. Dereference reference.link inputs into artifact FPs and metadata FPs
     dereferenced = {}
     dereferenced['inputs'] = common.deref_block(q2_vars['inputs'])
@@ -29,8 +35,8 @@ if 'plugin' in q2_vars:
 
     template = common.get_template('q2_action.py')
     script = io.StringIO(template.render(concourse_args=dereferenced,
-                                        plugin=q2_vars['plugin'],
-                                        action=q2_vars['action']))
+                                         plugin=q2_vars['plugin'],
+                                         action=q2_vars['action']))
     job_name = '%s::%s' % (q2_vars['plugin'], q2_vars['action'])
 elif q2_vars['action'] == 'import':
     input_ = common.deref(q2_vars['input'])
@@ -62,8 +68,10 @@ elif q2_vars['action'] == 'export':
     script = io.StringIO(template.render(input_=input_, format_=format_,
                                          ext=ext, output=output))
     job_name = 'export'
-else:
+elif q2_vars:
     raise Exception(f"unrecognized action {q2_vars['action']}")
+else:
+    raise Exception("Nothing to do.")
 
 # 4. Use paramiko to transfer the templated script
 

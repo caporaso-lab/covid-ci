@@ -20,6 +20,26 @@ resources:
       private_key: ((private_key))
       key_type: ((key_type))
       path: ((path_upload_gisaid))
+  
+  - name: upload-metadata-gisaid
+    type: simple-remote-directory-resource
+    check_every: 1m
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_upload_metadata_gisaid))
+
+  - name: cleaned-metadata-gisaid
+    type: simple-remote-directory-resource
+    check_every: 1m
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_cleaned_metadata_gisaid))
 
   - name: upload-az-tgen
     type: simple-remote-directory-resource
@@ -129,9 +149,41 @@ jobs:
 
         input_mapping:
           input1: upload-gisaid
+
       - put: seqs-gisaid
         params:
           source: outputs/result/
+
+  - name: clean-metadata
+    public: true
+    plan:
+      - get: covid-ci
+      - get: upload-metadata-gisaid
+        trigger: true
+      - task: clean-metadata
+        file: execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir)
+          
+          SCRIPT: rename_md_col.py
+          SCRIPT_I_input: input1
+          SCRIPT_output: ((path_cleaned_metadata_gisaid))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:05:00
+          SLURM_mem: 4096
+
+        input_mapping:
+          input1: upload-metadata-gisaid
+      
+      - put: cleaned-metadata-gisaid
+        params:
+          source: outputs/result/
+
 
   - name: filter-gisaid
     public: true
@@ -140,6 +192,31 @@ jobs:
       - get: seqs-gisaid
         passed: [import-gisaid]
         trigger: true
+      - get: cleaned-metadata-gisaid
+        passed: [clean-metadata]
+        trigger: true
+      - task: match-gisaid-metadata
+        file: covid-ci/tasks/execute2.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: feature_table::filter_seqs
+          Q2_I_data: input1
+          Q2_M_metadata: input2
+          Q2_O_filtered_data: .
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:30:00
+          SLURM_mem: 4096
+
+        input_mapping:
+          input1: seqs-gisaid
+          input2: cleaned-metadata-gisaid
+
       - task: filter-gisaid
         file: covid-ci/tasks/execute1.yaml
         params:
@@ -149,8 +226,8 @@ jobs:
           KEY_TYPE: ((key_type))
           WORKDIR: ((workdir))
 
-          Q2_ACTION: 'genome_sampler::filter_seqs'
-          Q2_I_sequences: 'input1'
+          Q2_ACTION: genome_sampler::filter_seqs
+          Q2_I_sequences: input1
           Q2_P_min_length: 20000
           Q2_O_filtered_sequences: ((path_filtered_seqs_gisaid))
 
@@ -159,7 +236,7 @@ jobs:
           SLURM_mem: 4096
 
         input_mapping:
-          input1: seqs-gisaid
+          input1: outputs/filtered_data
       - put: filtered-seqs-gisaid
         params:
           source: outputs/filtered_sequences/
@@ -180,8 +257,8 @@ jobs:
           KEY_TYPE: ((key_type))
           WORKDIR: ((workdir))
 
-          Q2_ACTION: 'feature_table::tabulate_seqs'
-          Q2_I_data: 'input1'
+          Q2_ACTION: feature_table::tabulate_seqs
+          Q2_I_data: input1
           Q2_O_visualization: ((path_view_seqs_gisaid))
 
           SLURM_cpus_per_task: 1
@@ -275,8 +352,8 @@ jobs:
           KEY_TYPE: ((key_type))
           WORKDIR: ((workdir))
 
-          Q2_ACTION: 'feature_table::merge_seqs'
-          Q2_I_sequences: 'input1 input2'
+          Q2_ACTION: feature_table::merge_seqs
+          Q2_I_data: input1 input2
           Q2_O_merged_data: ((path_seqs_az_focal))
 
         input_mapping:
@@ -285,3 +362,19 @@ jobs:
       - put: seqs-az-focal
         params:
           source: outputs/merged_data/
+
+    # - name: sample-longitudinal
+
+    # - name: sample-diversity
+
+    # - name: sample-neighbors
+
+    # - name: summarize-selections
+
+    # - name: combine-selections
+
+    # - name: filter-to-subsample
+
+    # - name: merge-seqs
+
+    # - name: export
