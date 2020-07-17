@@ -493,7 +493,7 @@ jobs:
           Q2_P_start_date: 2019-12
           Q2_P_samples_per_interval: 7
           Q2_P_days_per_interval: 7
-          Q2_C_dates_column: input2::date
+          Q2_C_dates: input2::date
           Q2_O_selection: ((path_selection_longitudinal))
 
           SLURM_cpus_per_task: 1
