@@ -296,7 +296,7 @@ jobs:
           Q2_ACTION: feature_table::filter_seqs
           Q2_I_data: input1
           Q2_M_metadata: input2
-          Q2_O_filtered_data: ((seqs_gisaid_matched))
+          Q2_O_filtered_data: ((path_seqs_gisaid_matched))
 
           SLURM_cpus_per_task: 1
           SLURM_time: 0:30:00
@@ -306,7 +306,8 @@ jobs:
           input1: seqs-gisaid
           input2: cleaned-metadata-gisaid
       - put: seqs-gisaid-matched
-        source: outputs/filtered_data/
+        params:
+          source: outputs/filtered_data/
 
   - name: filter-gisaid
     public: true
