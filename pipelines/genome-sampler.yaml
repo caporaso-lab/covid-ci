@@ -7,13 +7,15 @@ resource_types:
 resources:
   - name: covid-ci
     type: git
+    public: true
     source:
       uri: https://github.com/caporaso-lab/covid-ci
       branch: master
 
   - name: upload-gisaid
     type: simple-remote-directory-resource
-    check_every: 1m
+    public: true
+    check_every: 30m
     source:
       hostname: ((hostname))
       username: ((username))
@@ -23,7 +25,8 @@ resources:
   
   - name: upload-metadata-gisaid
     type: simple-remote-directory-resource
-    check_every: 1m
+    public: true
+    check_every: 30m
     source:
       hostname: ((hostname))
       username: ((username))
@@ -33,7 +36,8 @@ resources:
 
   - name: cleaned-metadata-gisaid
     type: simple-remote-directory-resource
-    check_every: 1m
+    public: true
+    check_every: 30m
     source:
       hostname: ((hostname))
       username: ((username))
@@ -43,7 +47,8 @@ resources:
 
   - name: upload-az-tgen
     type: simple-remote-directory-resource
-    check_every: 1m
+    public: true
+    check_every: 30m
     source:
       hostname: ((hostname))
       username: ((username))
@@ -53,7 +58,8 @@ resources:
 
   - name: upload-az-other
     type: simple-remote-directory-resource
-    check_every: 1m
+    public: true
+    check_every: 30m
     source:
       hostname: ((hostname))
       username: ((username))
@@ -63,6 +69,7 @@ resources:
 
   - name: seqs-gisaid
     type: simple-remote-directory-resource
+    public: true
     check_every: 48h
     source:
       hostname: ((hostname))
@@ -73,6 +80,7 @@ resources:
 
   - name: seqs-az-tgen
     type: simple-remote-directory-resource
+    public: true
     check_every: 48h
     source:
       hostname: ((hostname))
@@ -83,6 +91,7 @@ resources:
 
   - name: seqs-az-other
     type: simple-remote-directory-resource
+    public: true
     check_every: 48h
     source:
       hostname: ((hostname))
@@ -93,6 +102,7 @@ resources:
 
   - name: seqs-az-focal
     type: simple-remote-directory-resource
+    public: true
     check_every: 48h
     source:
       hostname: ((hostname))
@@ -103,6 +113,7 @@ resources:
 
   - name: seqs-gisaid-matched
     type: simple-remote-directory-resource
+    public: true
     check_every: 48h
     source:
       hostname: ((hostname))
@@ -113,6 +124,7 @@ resources:
 
   - name: seqs-gisaid-context
     type: simple-remote-directory-resource
+    public: true
     check_every: 48h
     source:
       hostname: ((hostname))
@@ -123,6 +135,7 @@ resources:
 
   - name: view-seqs-gisaid
     type: simple-remote-directory-resource
+    public: true
     check_every: 48h
     source:
       hostname: ((hostname))
@@ -133,6 +146,7 @@ resources:
 
   - name: selection-longitudinal
     type: simple-remote-directory-resource
+    public: true
     check_every: 48h
     source:
       hostname: ((hostname))
@@ -143,6 +157,7 @@ resources:
 
   - name: selection-diversity
     type: simple-remote-directory-resource
+    public: true
     check_every: 48h
     source:
       hostname: ((hostname))
@@ -153,6 +168,7 @@ resources:
 
   - name: selection-neighbors
     type: simple-remote-directory-resource
+    public: true
     check_every: 48h
     source:
       hostname: ((hostname))
@@ -163,6 +179,7 @@ resources:
 
   - name: view-selections
     type: simple-remote-directory-resource
+    public: true
     check_every: 48h
     source:
       hostname: ((hostname))
@@ -173,6 +190,7 @@ resources:
 
   - name: selection-final
     type: simple-remote-directory-resource
+    public: true
     check_every: 48h
     source:
       hostname: ((hostname))
@@ -183,6 +201,7 @@ resources:
 
   - name: subsampled-gisaid-context
     type: simple-remote-directory-resource
+    public: true
     check_every: 48h
     source:
       hostname: ((hostname))
@@ -193,6 +212,7 @@ resources:
       
   - name: seqs-final
     type: simple-remote-directory-resource
+    public: true
     check_every: 48h
     source:
       hostname: ((hostname))
@@ -203,6 +223,7 @@ resources:
 
   - name: seqs-final-fasta
     type: simple-remote-directory-resource
+    public: true
     check_every: 48h
     source:
       hostname: ((hostname))
@@ -562,8 +583,8 @@ jobs:
           WORKDIR: ((workdir))
 
           Q2_ACTION: genome_sampler::sample_neighbors
-          Q2_I_focal_seqs: input1
-          Q2_I_context_seqs: input2
+          Q2_I_focal_seqs: input2
+          Q2_I_context_seqs: input1
           Q2_C_locale_column: input3::division
           Q2_P_percent_id: .9999
           Q2_P_samples_per_cluster: 3
@@ -605,7 +626,7 @@ jobs:
           WORKDIR: ((workdir))
 
           Q2_ACTION: genome_sampler::summarize_selections
-          Q2_I_selections: input1 input2 input 3
+          Q2_I_selections: input1 input2 input3
           Q2_O_visualization: ((path_view_selections))
 
           SLURM_cpus_per_task: 1
@@ -643,7 +664,7 @@ jobs:
           WORKDIR: ((workdir))
 
           Q2_ACTION: genome_sampler::combine_selections
-          Q2_I_selections: input1 input2 input 3
+          Q2_I_selections: input1 input2 input3
           Q2_O_combined_selection: ((path_selection_final))
 
           SLURM_cpus_per_task: 1
@@ -679,7 +700,7 @@ jobs:
 
           Q2_ACTION: feature_table::filter_seqs
           Q2_I_data: input1
-          Q2_M_metadata_file: input2
+          Q2_M_metadata: input2
           Q2_O_filtered_data: ((path_subsampled_gisaid_context))
 
           SLURM_cpus_per_task: 1
@@ -688,7 +709,7 @@ jobs:
 
         input_mapping:
           input1: seqs-gisaid-context
-          input2: combined-selection
+          input2: selection-final
       - put: subsampled-gisaid-context
         params:
           source: outputs/filtered_data/
