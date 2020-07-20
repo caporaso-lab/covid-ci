@@ -9,6 +9,12 @@ from qiime2.sdk.util import parse_primitive
 import qiime2.plugins.{{ plugin }}.actions as q2_{{ plugin }}
 
 
+def _load_as_metadata(fp):
+    if fp.endswith('.qza'):
+        return qiime2.Artifact.load(fp).view(qiime2.Metadata)
+    else:
+        return qiime2.Metadata.load(fp)
+
 def _dereference_kwargs(kwargs, kwarg_type, ref):
     for param, spec in ref.items():
         if param not in concourse_args[kwarg_type]:
@@ -16,7 +22,7 @@ def _dereference_kwargs(kwargs, kwarg_type, ref):
 
         if kwarg_type == 'columns':
             file_, col = concourse_args['columns'][param]
-            loaded = qiime2.Metadata.load(file_).get_column(col)
+            loaded = _load_as_metadata(file_).get_column(col)
         else:
             arg = concourse_args[kwarg_type][param]
 
@@ -24,10 +30,10 @@ def _dereference_kwargs(kwargs, kwarg_type, ref):
                 loaded = parse_primitive(spec.qiime_type, arg)
             elif kwarg_type == 'metadata':
                 if type(arg) is list:
-                    loaded = [qiime2.Metadata.load(f) for f in arg]
+                    loaded = [_load_as_metadata(f) for f in arg]
                     loaded = loaded[0].merge(*loaded[1:])
                 else:
-                    loaded = qiime2.Metadata.load(arg)
+                    loaded = _load_as_metadata(arg)
             elif kwarg_type == 'inputs':
                 if type(arg) is list:
                     loaded = [qiime2.Artifact.load(f) for f in arg]
