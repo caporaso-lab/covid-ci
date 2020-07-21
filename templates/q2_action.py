@@ -57,22 +57,22 @@ _dereference_kwargs(kwargs, 'columns', action.signature.parameters)
 _dereference_kwargs(kwargs, 'params', action.signature.parameters)
 
 print()
-print('Now executing: {{ plugin }} {{ action }} with these arguments:',
+print('Now executing {{ plugin }} {{ action }} with these arguments:',
       flush=True)
 for param, arg in kwargs.items():
-    print(f'  {param}={arg}', flush=True)
+    print(f'  {param}: {arg}', flush=True)
 
 results = q2_{{ plugin }}.{{ action }}(**kwargs)
 
 print("Execution successful.", flush=True)
 print()
-print(repr(results), flush=True)
 
 manifest = {}
 
 for key, value in zip(results._fields, results):
     uuid = str(value.uuid)
     output_path = os.path.join(concourse_args['outputs'][key], uuid)
+    print(f'Saving {key} ({value})', flush=True)
     output_path = value.save(output_path)
     manifest[key] = output_path
 
@@ -80,4 +80,4 @@ with open(os.path.join(os.getcwd(), 'manifest.json'), 'w') as fh:
     fh.write(json.dumps(manifest))
 
 print()
-print("Results saved.", flush=True)
+print("Done.", flush=True)
