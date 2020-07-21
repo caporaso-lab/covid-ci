@@ -51,12 +51,19 @@ action = pm.get_plugin(id='{{ plugin }}').actions['{{ action }}']
 # generate kwargs after dereferencing QZAs and MD
 kwargs = {}
 
-_dereference_kwargs(kwargs, 'params', action.signature.parameters)
+_dereference_kwargs(kwargs, 'inputs', action.signature.inputs)
 _dereference_kwargs(kwargs, 'metadata', action.signature.parameters)
 _dereference_kwargs(kwargs, 'columns', action.signature.parameters)
-_dereference_kwargs(kwargs, 'inputs', action.signature.inputs)
+_dereference_kwargs(kwargs, 'params', action.signature.parameters)
+
+print('Now executing: {{ plugin }} {{ action }} with these arguments:')
+for param, arg in kwargs.items():
+    print(f'  {param}={arg}')
 
 results = q2_{{ plugin }}.{{ action }}(**kwargs)
+
+print("Execution successful.")
+print(repr(results))
 
 manifest = {}
 
@@ -68,3 +75,5 @@ for key, value in zip(results._fields, results):
 
 with open(os.path.join(os.getcwd(), 'manifest.json'), 'w') as fh:
     fh.write(json.dumps(manifest))
+
+print("Results saved.")

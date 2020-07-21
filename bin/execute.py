@@ -116,6 +116,9 @@ with common.make_client_from_env() as client:
                     print(line, end='')
             except IOError:
                 pass
+        else:
+            for line in stdout_fh:
+                print(line, end='')
 
     for line in stdout_fh:
         print(line, end='')
