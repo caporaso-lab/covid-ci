@@ -56,6 +56,7 @@ _dereference_kwargs(kwargs, 'metadata', action.signature.parameters)
 _dereference_kwargs(kwargs, 'columns', action.signature.parameters)
 _dereference_kwargs(kwargs, 'params', action.signature.parameters)
 
+print()
 print('Now executing: {{ plugin }} {{ action }} with these arguments:',
       flush=True)
 for param, arg in kwargs.items():
@@ -64,7 +65,8 @@ for param, arg in kwargs.items():
 results = q2_{{ plugin }}.{{ action }}(**kwargs)
 
 print("Execution successful.", flush=True)
-print(repr(results))
+print()
+print(repr(results), flush=True)
 
 manifest = {}
 
@@ -77,4 +79,5 @@ for key, value in zip(results._fields, results):
 with open(os.path.join(os.getcwd(), 'manifest.json'), 'w') as fh:
     fh.write(json.dumps(manifest))
 
+print()
 print("Results saved.", flush=True)
