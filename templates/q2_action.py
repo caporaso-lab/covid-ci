@@ -64,6 +64,8 @@ for param in itertools.chain(concourse_args,
                              concourse_args['metadata'],
                              concourse_args['columns'],
                              concourse_args['params']):
+    if param in {'inputs', 'metadata', 'columns', 'params'}:
+        continue
     if param not in used:
         raise ValueError(f"Unused parameter: {param} is it misspelled?")
 
