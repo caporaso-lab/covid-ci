@@ -1,3 +1,36 @@
+groups:
+  - name: all
+    jobs:
+      - import-gisaid
+      - clean-metadata
+      - match-gisaid
+      - import-az-tgen
+      - import-az-other
+      - filter-gisaid
+      - merge-focal-seqs
+      - sample-neighbors
+      - sample-longitudinal
+      - sample-diversity
+      - view-gisaid
+      - combine-selections
+      - summarize-selections
+      - filter-to-subsample
+      - merge-seqs
+      - export
+  - name: imports
+    jobs:
+      - import-gisaid
+      - clean-metadata
+      - match-gisaid
+      - import-az-tgen
+      - import-az-other
+      - filter-gisaid
+  - name: results
+    jobs:
+      - view-gisaid
+      - summarize-selections
+      - export
+
 resource_types:
   - name: simple-remote-directory-resource
     type: docker-image
@@ -255,7 +288,7 @@ jobs:
           Q2_OUTPUT: ((path_seqs_gisaid))
 
           SLURM_cpus_per_task: 1
-          SLURM_time: 0:20:00
+          SLURM_time: 0:30:00
           SLURM_mem: 16384
 
         input_mapping:
@@ -338,7 +371,7 @@ jobs:
         passed: [match-gisaid]
         trigger: true
       - get: cleaned-metadata-gisaid
-        passed: [clean-metadata]
+        passed: [match-gisaid]
         trigger: true
       - task: filter-gisaid
         file: covid-ci/tasks/execute1.yaml
@@ -355,7 +388,7 @@ jobs:
           Q2_O_filtered_sequences: ((path_seqs_gisaid_context))
 
           SLURM_cpus_per_task: 1
-          SLURM_time: 0:30:00
+          SLURM_time: 0:35:00
           SLURM_mem: 4096
 
         input_mapping:
@@ -385,7 +418,7 @@ jobs:
           Q2_O_visualization: ((path_view_seqs_gisaid))
 
           SLURM_cpus_per_task: 1
-          SLURM_time: 1:00:00
+          SLURM_time: 1:15:00
           SLURM_mem: 16384
           
         input_mapping:
@@ -416,7 +449,7 @@ jobs:
           Q2_OUTPUT: ((path_seqs_az_tgen))
 
           SLURM_cpus_per_task: 1
-          SLURM_time: 0:20:00
+          SLURM_time: 0:15:00
           SLURM_mem: 4096
 
         input_mapping:
@@ -447,7 +480,7 @@ jobs:
           Q2_OUTPUT: ((path_seqs_az_other))
 
           SLURM_cpus_per_task: 1
-          SLURM_time: 0:20:00
+          SLURM_time: 0:15:00
           SLURM_mem: 4096
 
         input_mapping:
@@ -480,7 +513,7 @@ jobs:
           Q2_O_merged_data: ((path_seqs_az_focal))
 
           SLURM_cpus_per_task: 1
-          SLURM_time: 0:20:00
+          SLURM_time: 0:15:00
           SLURM_mem: 4096
 
         input_mapping:
@@ -498,7 +531,7 @@ jobs:
         passed: [filter-gisaid]
         trigger: true
       - get: cleaned-metadata-gisaid
-        passed: [clean-metadata]
+        passed: [filter-gisaid]
         trigger: true
       - task: sample-longitudinal
         file: covid-ci/tasks/execute2.yaml
@@ -571,7 +604,7 @@ jobs:
         passed: [merge-focal-seqs]
         trigger: true
       - get: cleaned-metadata-gisaid
-        passed: [clean-metadata]
+        passed: [filter-gisaid]
         trigger: true
       - task: sample-neighbors
         file: covid-ci/tasks/execute3.yaml
@@ -585,14 +618,14 @@ jobs:
           Q2_ACTION: genome_sampler::sample_neighbors
           Q2_I_focal_seqs: input2
           Q2_I_context_seqs: input1
-          Q2_C_locale_column: input3::division
+          Q2_C_locale: input3::division
           Q2_P_percent_id: .9999
           Q2_P_samples_per_cluster: 3
           Q2_P_n_threads: 24
           Q2_O_selection: ((path_selection_neighbors))
 
           SLURM_cpus_per_task: 24
-          SLURM_time: 24:00:00
+          SLURM_time: 5:30:00
           SLURM_mem: 65536
 
         input_mapping:
@@ -607,15 +640,18 @@ jobs:
     public: true
     plan:
       - get: covid-ci
-      - get: selection-longitudinal
-        passed: [sample-longitudinal]
+      - get: seqs-gisaid-context
+        passed: [sample-longitudinal, sample-diversity, sample-neighbors]
         trigger: true
-      - get: selection-diversity
-        passed: [sample-diversity]
-        trigger: true
-      - get: selection-neighbors
+      - get: seqs-az-focal
         passed: [sample-neighbors]
         trigger: true
+      - get: selection-longitudinal
+        passed: [sample-longitudinal]
+      - get: selection-diversity
+        passed: [sample-diversity]
+      - get: selection-neighbors
+        passed: [sample-neighbors]
       - task: summarize-selections
         file: covid-ci/tasks/execute3.yaml
         params:
@@ -630,7 +666,7 @@ jobs:
           Q2_O_visualization: ((path_view_selections))
 
           SLURM_cpus_per_task: 1
-          SLURM_time: 0:20:00
+          SLURM_time: 0:15:00
           SLURM_mem: 4096
         
         input_mapping:
@@ -645,15 +681,18 @@ jobs:
     public: true
     plan:
       - get: covid-ci
-      - get: selection-longitudinal
-        passed: [sample-longitudinal]
+      - get: seqs-gisaid-context
+        passed: [sample-longitudinal, sample-diversity, sample-neighbors]
         trigger: true
-      - get: selection-diversity
-        passed: [sample-diversity]
-        trigger: true
-      - get: selection-neighbors
+      - get: seqs-az-focal
         passed: [sample-neighbors]
         trigger: true
+      - get: selection-longitudinal
+        passed: [sample-longitudinal]
+      - get: selection-diversity
+        passed: [sample-diversity]
+      - get: selection-neighbors
+        passed: [sample-neighbors]
       - task: combine-selections
         file: covid-ci/tasks/execute3.yaml
         params:
@@ -684,8 +723,7 @@ jobs:
     plan:
       - get: covid-ci
       - get: seqs-gisaid-context
-        passed: [filter-gisaid]
-        trigger: true
+        passed: [combine-selections]
       - get: selection-final
         passed: [combine-selections]
         trigger: true
@@ -704,7 +742,7 @@ jobs:
           Q2_O_filtered_data: ((path_subsampled_gisaid_context))
 
           SLURM_cpus_per_task: 1
-          SLURM_time: 0:20:00
+          SLURM_time: 0:15:00
           SLURM_mem: 16384
 
         input_mapping:
@@ -719,12 +757,11 @@ jobs:
     plan:
       - get: covid-ci
       - get: seqs-az-focal
-        passed: [merge-focal-seqs]
-        trigger: true
+        passed: [combine-selections]
       - get: subsampled-gisaid-context
         passed: [filter-to-subsample]
         trigger: true
-      - task: filter-to-subsample
+      - task: merge-seqs
         file: covid-ci/tasks/execute2.yaml
         params:
           HOSTNAME: ((hostname))
@@ -738,7 +775,7 @@ jobs:
           Q2_O_merged_data: ((path_seqs_final))
 
           SLURM_cpus_per_task: 1
-          SLURM_time: 0:20:00
+          SLURM_time: 0:10:00
           SLURM_mem: 16384
 
         input_mapping:
@@ -771,7 +808,7 @@ jobs:
           Q2_OUTPUT: ((path_seqs_final_fasta))
 
           SLURM_cpus_per_task: 1
-          SLURM_time: 0:20:00
+          SLURM_time: 0:15:00
           SLURM_mem: 16384
 
         input_mapping:
