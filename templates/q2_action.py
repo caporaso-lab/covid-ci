@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import json
+import itertools
 
 import qiime2
 import qiime2.sdk as sdk
@@ -8,6 +9,8 @@ from qiime2.sdk.util import parse_primitive
 
 import qiime2.plugins.{{ plugin }}.actions as q2_{{ plugin }}
 
+concourse_args = {{ concourse_args }}
+used = set()
 
 def _load_as_metadata(fp):
     if fp.endswith('.qza'):
@@ -23,8 +26,10 @@ def _dereference_kwargs(kwargs, kwarg_type, ref):
         if kwarg_type == 'columns':
             file_, col = concourse_args['columns'][param]
             loaded = _load_as_metadata(file_).get_column(col)
+            used.add(param)
         else:
             arg = concourse_args[kwarg_type][param]
+            used.add(param)
 
             if kwarg_type == 'params':
                 loaded = parse_primitive(spec.qiime_type, arg)
@@ -43,8 +48,6 @@ def _dereference_kwargs(kwargs, kwarg_type, ref):
         kwargs[param] = loaded
 
 
-concourse_args = {{ concourse_args }}
-
 pm = sdk.PluginManager()
 action = pm.get_plugin(id='{{ plugin }}').actions['{{ action }}']
 
@@ -55,6 +58,14 @@ _dereference_kwargs(kwargs, 'inputs', action.signature.inputs)
 _dereference_kwargs(kwargs, 'metadata', action.signature.parameters)
 _dereference_kwargs(kwargs, 'columns', action.signature.parameters)
 _dereference_kwargs(kwargs, 'params', action.signature.parameters)
+
+for param in itertools.chain(concourse_args,
+                             concourse_args['inputs'],
+                             concourse_args['metadata'],
+                             concourse_args['columns'],
+                             concourse_args['params']):
+    if param not in used:
+        raise ValueError(f"Unused parameter: {param} is it misspelled?")
 
 print()
 print('Now executing {{ plugin }} {{ action }} with these arguments:',
