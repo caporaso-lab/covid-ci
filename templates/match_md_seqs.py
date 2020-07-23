@@ -17,6 +17,6 @@ missing_metadata = seqs_index.difference(md_index)
 if not missing_metadata.empty:
     print("Missing metadata for the following ids:", flush=True)
     for id_ in missing_metadata:
-        print('  ' + id, flush=True)
+        print('  ' + id_, flush=True)
 
     sys.exit(1)
