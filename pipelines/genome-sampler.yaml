@@ -2,10 +2,12 @@ groups:
   - name: all
     jobs:
       - import-gisaid
-      - clean-metadata
+      - clean-gisaid-metadata
       - match-gisaid
       - import-az-tgen
+      - clean-tgen-metadata
       - import-az-other
+      - clean-az-metadata
       - filter-gisaid
       - merge-focal-seqs
       - sample-neighbors
@@ -20,10 +22,12 @@ groups:
   - name: imports
     jobs:
       - import-gisaid
-      - clean-metadata
+      - clean-gisaid-metadata
       - match-gisaid
       - import-az-tgen
+      - clean-tgen-metadata
       - import-az-other
+      - clean-az-metadata
       - filter-gisaid
   - name: results
     jobs:
@@ -36,6 +40,11 @@ resource_types:
     type: docker-image
     source:
       repository: qiime2/simple-remote-directory-resource
+
+  - name: gsheets-resource
+    type: docker-image
+    source:
+      repository: qiime2/gsheets-resource
 
 resources:
   - name: covid-ci
@@ -55,7 +64,7 @@ resources:
       private_key: ((private_key))
       key_type: ((key_type))
       path: ((path_upload_gisaid))
-  
+
   - name: upload-metadata-gisaid
     type: simple-remote-directory-resource
     public: true
@@ -89,16 +98,52 @@ resources:
       key_type: ((key_type))
       path: ((path_upload_az_tgen))
 
+  - name: gsheets-az-tgen
+    type: gsheets-resource
+    public: true
+    check_every: 15m
+    source:
+      file_id: ((tgen_metadata_file_id))
+      rev_key: ((tgen_metadata_rev_key))
+      credentials: ((service_account))
+
+  - name: metadata-az-tgen
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_path: ((key_path))
+      path: ((path_metadata_az_tgen))
+
   - name: upload-az-other
     type: simple-remote-directory-resource
     public: true
     check_every: 30m
     source:
       hostname: ((hostname))
+
+  - name: gsheets-az-other
+    type: gsheets-resource
+    public: true
+    check_every: 15m
+    source:
+      file_id: ((az_metadata_file_id))
+      rev_key: ((az_metadata_rev_key))
+      credentials: ((service_account))
+
+  - name: metadata-az-other
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
       username: ((username))
       private_key: ((private_key))
-      key_type: ((key_type))
-      path: ((path_upload_az_other))
+      key_path: ((key_path))
+      path: ((path_metadata_az_other))
 
   - name: seqs-gisaid
     type: simple-remote-directory-resource
@@ -242,7 +287,7 @@ resources:
       private_key: ((private_key))
       key_type: ((key_type))
       path: ((path_subsampled_gisaid_context))
-      
+
   - name: seqs-final
     type: simple-remote-directory-resource
     public: true
@@ -298,13 +343,13 @@ jobs:
         params:
           source: outputs/result/
 
-  - name: clean-metadata
+  - name: clean-gisaid-metadata
     public: true
     plan:
       - get: covid-ci
       - get: upload-metadata-gisaid
         trigger: true
-      - task: clean-metadata
+      - task: clean-gisaid-metadata
         file: covid-ci/tasks/execute1.yaml
         params:
           HOSTNAME: ((hostname))
@@ -312,7 +357,7 @@ jobs:
           PRIVATE_KEY: ((private_key))
           KEY_TYPE: ((key_type))
           WORKDIR: ((workdir))
-          
+
           SCRIPT: rename_md_col.py
           SCRIPT_I_input: input1
           SCRIPT_output: ((path_cleaned_metadata_gisaid))
@@ -323,7 +368,7 @@ jobs:
 
         input_mapping:
           input1: upload-metadata-gisaid
-      
+
       - put: cleaned-metadata-gisaid
         params:
           source: outputs/result/
@@ -336,7 +381,7 @@ jobs:
         passed: [import-gisaid]
         trigger: true
       - get: cleaned-metadata-gisaid
-        passed: [clean-metadata]
+        passed: [clean-gisaid-metadata]
         trigger: true
       - task: match-gisaid-metadata
         file: covid-ci/tasks/execute2.yaml
@@ -420,7 +465,7 @@ jobs:
           SLURM_cpus_per_task: 1
           SLURM_time: 1:15:00
           SLURM_mem: 16384
-          
+
         input_mapping:
           input1: seqs-gisaid-context
       - put: view-seqs-gisaid
@@ -458,6 +503,27 @@ jobs:
         params:
           source: outputs/result/
 
+  - name: copy-tgen-metadata
+    public: true
+    plan:
+      - get: covid-ci
+      - get: gsheets-az-tgen
+        trigger: true
+      - task: validate-tgen-metadata
+        file: covid-ci/tasks/transfer.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+          EXTERNAL_DIR: ((path_metadata_az_tgen))
+        input_mapping:
+          input: gsheets-az-tgen
+      - put: metadata-az-tgen
+        params:
+          source: output
+
   - name: import-az-other
     public: true
     plan:
@@ -488,6 +554,27 @@ jobs:
       - put: seqs-az-other
         params:
           source: outputs/result/
+
+  - name: copy-az-other-metadata
+    public: true
+    plan:
+      - get: covid-ci
+      - get: gsheets-az-other
+        trigger: true
+      - task: copy-az-other-metadata
+        file: covid-ci/tasks/transfer.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+          EXTERNAL_DIR: ((path_metadata_az_other))
+        input_mapping:
+          input: gsheets-az-other
+      - put: metadata-az-other
+        params:
+          source: output
 
   - name: merge-focal-seqs
     public: true
@@ -586,7 +673,7 @@ jobs:
           SLURM_cpus_per_task: 24
           SLURM_time: 48:00:00
           SLURM_mem: 65536
-        
+
         input_mapping:
           input1: seqs-gisaid-context
       - put: selection-diversity
@@ -668,7 +755,7 @@ jobs:
           SLURM_cpus_per_task: 1
           SLURM_time: 0:15:00
           SLURM_mem: 4096
-        
+
         input_mapping:
           input1: selection-longitudinal
           input2: selection-diversity

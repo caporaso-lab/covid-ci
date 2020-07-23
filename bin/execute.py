@@ -96,7 +96,6 @@ with common.make_client_from_env() as client:
 # 5. Use paramiko to `srun` (or maybe `sbatch` and `tail`) the script,
 #    blocking until the queue finishes the job
 
-    #channel = client.invoke_shell()
     print(f"Preparing job: {job_id}")
     transport = client.get_transport()
     channel = transport.open_session()
