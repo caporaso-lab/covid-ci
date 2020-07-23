@@ -744,6 +744,10 @@ jobs:
       - get: seqs-az-other
         passed: [match-az-other-metadata-and-seqs]
         trigger: true
+      - get: cleaned-metadata-az-tgen
+        passed: [match-tgen-metadata-and-seqs]
+      - get: cleaned-metadata-az-other
+        passed: [match-az-other-metadata-and-seqs]
       - task: merge-focal-seqs
         file: covid-ci/tasks/execute2.yaml
         params:
@@ -851,6 +855,10 @@ jobs:
       - get: cleaned-metadata-gisaid
         passed: [filter-gisaid]
         trigger: true
+      - get: cleaned-metadata-az-tgen
+        passed: [merge-focal-seqs]
+      - get: cleaned-metadata-az-other
+        passed: [merge-focal-seqs]
       - task: sample-neighbors
         file: covid-ci/tasks/execute3.yaml
         params:
@@ -938,6 +946,12 @@ jobs:
         passed: [sample-diversity]
       - get: selection-neighbors
         passed: [sample-neighbors]
+      - get: cleaned-metadata-az-tgen
+        passed: [sample-neighbors]
+      - get: cleaned-metadata-az-other
+        passed: [sample-neighbors]
+      - get: cleaned-metadata-gisaid
+        passed: [sample-neighbors, sample-longitudinal]
       - task: combine-selections
         file: covid-ci/tasks/execute3.yaml
         params:
