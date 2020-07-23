@@ -6,8 +6,10 @@ groups:
       - match-gisaid
       - import-az-tgen
       - copy-tgen-metadata
+      - match-tgen-metadata-and-seqs
       - import-az-other
       - copy-az-other-metadata
+      - match-az-other-metadata-and-seqs
       - filter-gisaid
       - merge-focal-seqs
       - sample-neighbors
@@ -26,8 +28,10 @@ groups:
       - match-gisaid
       - import-az-tgen
       - copy-tgen-metadata
+      - match-tgen-metadata-and-seqs
       - import-az-other
       - copy-az-other-metadata
+      - match-az-other-metadata-and-seqs
       - filter-gisaid
   - name: results
     jobs:
@@ -528,6 +532,37 @@ jobs:
         params:
           source: output
 
+  - name: match-tgen-metadata-and-seqs
+    public: true
+    plan:
+      - get: covid-ci
+      - get: metadata-az-tgen
+        passed: [copy-tgen-metadata]
+        trigger: true
+      - get: seqs-az-tgen
+        passed: [import-az-tgen]
+        trigger: true
+      - task: match-tgen-metadata-and-seqs
+        file: covid-ci/tasks/execute2.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          SCRIPT: match_md_seqs.py
+          SCRIPT_I_metadata: input1
+          SCRIPT_I_seqs: input2
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:15:00
+          SLURM_mem: 4096
+
+        input_mapping:
+          input1: metadata-az-tgen
+          input2: seqs-az-tgen
+
   - name: import-az-other
     public: true
     plan:
@@ -580,15 +615,46 @@ jobs:
         params:
           source: output
 
+  - name: match-az-other-metadata-and-seqs
+    public: true
+    plan:
+      - get: covid-ci
+      - get: metadata-az-other
+        passed: [copy-az-other-metadata]
+        trigger: true
+      - get: seqs-az-other
+        passed: [import-az-other]
+        trigger: true
+      - task: match-az-other-metadata-and-seqs
+        file: covid-ci/tasks/execute2.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          SCRIPT: match_md_seqs.py
+          SCRIPT_I_metadata: input1
+          SCRIPT_I_seqs: input2
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:15:00
+          SLURM_mem: 4096
+
+        input_mapping:
+          input1: metadata-az-other
+          input2: seqs-az-other
+
   - name: merge-focal-seqs
     public: true
     plan:
       - get: covid-ci
       - get: seqs-az-tgen
-        passed: [import-az-tgen]
+        passed: [match-tgen-metadata-and-seqs]
         trigger: true
       - get: seqs-az-other
-        passed: [import-az-other]
+        passed: [match-az-other-metadata-and-seqs]
         trigger: true
       - task: merge-focal-seqs
         file: covid-ci/tasks/execute2.yaml
