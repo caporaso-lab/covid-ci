@@ -5,9 +5,9 @@ groups:
       - clean-gisaid-metadata
       - match-gisaid
       - import-az-tgen
-      - clean-tgen-metadata
+      - copy-tgen-metadata
       - import-az-other
-      - clean-az-metadata
+      - copy-az-other-metadata
       - filter-gisaid
       - merge-focal-seqs
       - sample-neighbors
@@ -25,9 +25,9 @@ groups:
       - clean-gisaid-metadata
       - match-gisaid
       - import-az-tgen
-      - clean-tgen-metadata
+      - copy-tgen-metadata
       - import-az-other
-      - clean-az-metadata
+      - copy-az-other-metadata
       - filter-gisaid
   - name: results
     jobs:
@@ -115,7 +115,7 @@ resources:
       hostname: ((hostname))
       username: ((username))
       private_key: ((private_key))
-      key_path: ((key_path))
+      key_type: ((key_type))
       path: ((path_metadata_az_tgen))
 
   - name: upload-az-other
@@ -124,6 +124,10 @@ resources:
     check_every: 30m
     source:
       hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_upload_az_other))
 
   - name: gsheets-az-other
     type: gsheets-resource
@@ -142,7 +146,7 @@ resources:
       hostname: ((hostname))
       username: ((username))
       private_key: ((private_key))
-      key_path: ((key_path))
+      key_type: ((key_type))
       path: ((path_metadata_az_other))
 
   - name: seqs-gisaid
@@ -509,7 +513,7 @@ jobs:
       - get: covid-ci
       - get: gsheets-az-tgen
         trigger: true
-      - task: validate-tgen-metadata
+      - task: copy-tgen-metadata
         file: covid-ci/tasks/transfer.yaml
         params:
           HOSTNAME: ((hostname))

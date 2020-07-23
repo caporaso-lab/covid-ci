@@ -4,7 +4,7 @@ import os
 
 import common
 
-input_file = os.listdir('input')[0]
+input_file = os.path.join('input', os.listdir('input')[0])
 file_name = os.path.basename(input_file)
 
 output_path = os.path.join(os.environ['EXTERNAL_DIR'], file_name)
