@@ -14,7 +14,7 @@ md_index = md.to_dataframe().index
 
 missing_metadata = seqs_index.difference(md_index)
 
-if missing_metadata:
+if not missing_metadata.empty:
     print("Missing metadata for the following ids:", flush=True)
     for id_ in missing_metadata:
         print('  ' + id, flush=True)
