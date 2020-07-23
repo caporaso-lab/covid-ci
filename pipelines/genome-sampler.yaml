@@ -6,9 +6,11 @@ groups:
       - match-gisaid
       - import-az-tgen
       - copy-tgen-metadata
+      - clean-tgen-metadata
       - match-tgen-metadata-and-seqs
       - import-az-other
       - copy-az-other-metadata
+      - clean-az-other-metadata
       - match-az-other-metadata-and-seqs
       - filter-gisaid
       - merge-focal-seqs
@@ -28,9 +30,11 @@ groups:
       - match-gisaid
       - import-az-tgen
       - copy-tgen-metadata
+      - clean-tgen-metadata
       - match-tgen-metadata-and-seqs
       - import-az-other
       - copy-az-other-metadata
+      - clean-az-other-metadata
       - match-az-other-metadata-and-seqs
       - filter-gisaid
   - name: results
@@ -122,6 +126,17 @@ resources:
       key_type: ((key_type))
       path: ((path_metadata_az_tgen))
 
+  - name: cleaned-metadata-az-tgen
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_cleaned_metadata_az_tgen))
+
   - name: upload-az-other
     type: simple-remote-directory-resource
     public: true
@@ -152,6 +167,17 @@ resources:
       private_key: ((private_key))
       key_type: ((key_type))
       path: ((path_metadata_az_other))
+
+  - name: cleaned-metadata-az-other
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_cleaned_metadata_az_other))
 
   - name: seqs-gisaid
     type: simple-remote-directory-resource
@@ -532,12 +558,43 @@ jobs:
         params:
           source: output
 
-  - name: match-tgen-metadata-and-seqs
+  - name: clean-tgen-metadata
     public: true
     plan:
       - get: covid-ci
       - get: metadata-az-tgen
         passed: [copy-tgen-metadata]
+        trigger: true
+      - task: clean-tgen-metadata
+        file: covid-ci/tasks/execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          SCRIPT: rename_md_col.py
+          SCRIPT_I_input: input1
+          SCRIPT_output: ((path_cleaned_metadata_az_tgen))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:05:00
+          SLURM_mem: 4096
+
+        input_mapping:
+          input1: metadata-az-tgen
+
+      - put: cleaned-metadata-az-tgen
+        params:
+          source: outputs/result/
+
+  - name: match-tgen-metadata-and-seqs
+    public: true
+    plan:
+      - get: covid-ci
+      - get: cleaned-metadata-az-tgen
+        passed: [clean-tgen-metadata]
         trigger: true
       - get: seqs-az-tgen
         passed: [import-az-tgen]
@@ -560,7 +617,7 @@ jobs:
           SLURM_mem: 4096
 
         input_mapping:
-          input1: metadata-az-tgen
+          input1: cleaned-metadata-az-tgen
           input2: seqs-az-tgen
 
   - name: import-az-other
@@ -615,12 +672,43 @@ jobs:
         params:
           source: output
 
-  - name: match-az-other-metadata-and-seqs
+  - name: clean-az-other-metadata
     public: true
     plan:
       - get: covid-ci
       - get: metadata-az-other
         passed: [copy-az-other-metadata]
+        trigger: true
+      - task: clean-az-other-metadata
+        file: covid-ci/tasks/execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          SCRIPT: rename_md_col.py
+          SCRIPT_I_input: input1
+          SCRIPT_output: ((path_cleaned_metadata_az_other))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:05:00
+          SLURM_mem: 4096
+
+        input_mapping:
+          input1: metadata-az-other
+
+      - put: cleaned-metadata-az-other
+        params:
+          source: outputs/result/
+
+  - name: match-az-other-metadata-and-seqs
+    public: true
+    plan:
+      - get: covid-ci
+      - get: cleaned-metadata-az-other
+        passed: [clean-az-other-metadata]
         trigger: true
       - get: seqs-az-other
         passed: [import-az-other]
@@ -643,7 +731,7 @@ jobs:
           SLURM_mem: 4096
 
         input_mapping:
-          input1: metadata-az-other
+          input1: cleaned-metadata-az-other
           input2: seqs-az-other
 
   - name: merge-focal-seqs

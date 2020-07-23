@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import sys
 
 import qiime2
 import pandas as pd
@@ -11,4 +12,11 @@ md = qiime2.Metadata.load('{{ metadata }}')
 seqs_index = seqs.view(pd.Series).index
 md_index = md.to_dataframe().index
 
-pdt.assert_index_equal(seqs_index, md_index)
+missing_metadata = seqs_index.difference(md_index)
+
+if missing_metadata:
+    print("Missing metadata for the following ids:", flush=True)
+    for id_ in missing_metadata:
+        print('  ' + id, flush=True)
+
+    sys.exit(1)
