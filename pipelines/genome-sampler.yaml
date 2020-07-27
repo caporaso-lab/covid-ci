@@ -19,7 +19,7 @@ groups:
       - sample-diversity
       - view-gisaid
       - combine-selections
-      - merge-metadata
+      - combine-metadata
       - summarize-selections
       - filter-to-subsample
       - merge-seqs
