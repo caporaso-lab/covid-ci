@@ -23,6 +23,7 @@ groups:
       - summarize-selections
       - filter-to-subsample
       - merge-seqs
+      - align-seqs
       - export
   - name: imports
     jobs:
@@ -355,6 +356,17 @@ resources:
       private_key: ((private_key))
       key_type: ((key_type))
       path: ((path_combined_metadata))
+
+  - name: alignment-raw
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_alignment_raw))
 
 jobs:
   - name: import-gisaid
@@ -1037,6 +1049,8 @@ jobs:
       - get: selection-final
         passed: [combine-selections]
         trigger: true
+      - get: combined-metadata
+        passed: [combine-metadata]
       - task: filter-to-subsample
         file: covid-ci/tasks/execute2.yaml
         params:
@@ -1071,6 +1085,8 @@ jobs:
       - get: subsampled-gisaid-context
         passed: [filter-to-subsample]
         trigger: true
+      - get: combined-metadata
+        passed: [filter-to-subsample]
       - task: merge-seqs
         file: covid-ci/tasks/execute2.yaml
         params:
@@ -1094,6 +1110,39 @@ jobs:
       - put: seqs-final
         params:
           source: outputs/merged_data/
+
+  - name: align-seqs
+    public: true
+    plan:
+      - get: covid-ci
+      - get: seqs-final
+        passed: [merge-seqs]
+        trigger: true
+      - get: combined-metadata
+        passed: [merge-seqs]
+      - task: align-seqs
+        file: covid-ci/tasks/execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: alignment::mafft
+          Q2_I_sequences: input1
+          Q2_P_n_threads: 24
+          Q2_O_alignment: ((path_alignment_raw))
+
+          SLURM_cpus_per_task: 24
+          SLURM_time: "4:00:00"
+          SLURM_mem: 65536
+
+        input_mapping:
+          input1: seqs-final
+      - put: alignment-raw
+        params:
+          source: outputs/alignment
 
   - name: export
     public: true
