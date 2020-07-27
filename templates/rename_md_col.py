@@ -35,6 +35,8 @@ new_df['date'] = df['date']
 new_df = new_df.loc[new_df['date'].str.count('-') == 2]
 
 path = os.path.join('{{ output }}', os.path.basename(input_))
+if path.endswith('.gz'):
+    path = path[:-3]
 new_df.to_csv(path, sep='\t', index=False)
 
 with open(os.path.join(os.getcwd(), 'manifest.json'), 'w') as fh:
