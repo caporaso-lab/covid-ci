@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 import os
 import json
+import skbio
 
 import pandas as pd
 
 input_ = '{{ input }}'
-df = pd.read_csv(input_, sep='\t')
+
+with skbio.io.open(input_) as fh:
+    df = pd.read_csv(fh, sep='\t')
 
 new_df = pd.DataFrame()
 
