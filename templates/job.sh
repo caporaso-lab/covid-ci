@@ -9,6 +9,6 @@
 #SBATCH --hint=compute_bound
 
 module load anaconda3
-conda activate genome-sampler
+conda activate covid-ci
 
 python job.py

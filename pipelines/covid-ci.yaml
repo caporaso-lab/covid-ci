@@ -441,6 +441,7 @@ jobs:
           Q2_ACTION: feature_table::filter_seqs
           Q2_I_data: input1
           Q2_M_metadata: input2
+          Q2_P_where: "[division] != 'Arizona'"
           Q2_O_filtered_data: ((path_seqs_gisaid_matched))
 
           SLURM_cpus_per_task: 1
