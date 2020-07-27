@@ -6,10 +6,31 @@ import pandas as pd
 
 input_ = '{{ input }}'
 df = pd.read_csv(input_, sep='\t')
-df = df.rename(columns={'strain': 'id'})
+
+new_df = pd.DataFrame()
+
+new_df['id'] = df['strain']
+
+if 'gisaid_epi_isl' in df.columns:
+    new_df['gisaid_epi_isl'] = df['gisaid_epi_isl']
+    non_epi_ids = ~new_df['gisaid_epi_isl'].str.startswith('EPI_')
+    new_df['gisaid_epi_isl'].loc[non_epi_ids] = None
+
+new_df['submitting_lab'] = df['submitting_lab']
+new_df['region'] = df['region'].str.replace(' ', '')
+new_df['country'] = df['country'].str.replace(' ', '')
+new_df['division'] = df['division'].str.replace(' ', '')
+new_df['location'] = df['location'].str.replace(' ', '')
+
+new_df['combined_location'] = \
+    new_df[['country', 'division', 'location']].agg('.'.join, axis=1)
+
+new_df['date'] = df['date']
+
+new_df = new_df.loc[new_df['date'].str.count('-') == 2]
 
 path = os.path.join('{{ output }}', os.path.basename(input_))
-df.to_csv(path, sep='\t', index=False)
+new_df.to_csv(path, sep='\t', index=False)
 
 with open(os.path.join(os.getcwd(), 'manifest.json'), 'w') as fh:
     fh.write(json.dumps({'result': path}))
