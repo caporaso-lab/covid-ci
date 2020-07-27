@@ -26,7 +26,8 @@ new_df['division'] = df['division'].str.replace(' ', '')
 new_df['location'] = df['location'].str.replace(' ', '')
 
 new_df['combined_location'] = \
-    new_df[['country', 'division', 'location']].agg('.'.join, axis=1)
+    new_df[['country', 'division', 'location']].agg(
+        lambda x: '.'.join([s if type(s) == str else '' for s in x]), axis=1)
 
 new_df['date'] = df['date']
 

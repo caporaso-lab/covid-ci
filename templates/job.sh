@@ -4,6 +4,7 @@
 {% for param, arg in slurm_vars.items() %}
 #SBATCH --{{ param|replace('_', '-') }}={{ arg }}
 {% endfor %}
+#SBATCH --account=covid19
 #SBATCH --output=stdio.out
 #SBATCH --hint=compute_bound
 
