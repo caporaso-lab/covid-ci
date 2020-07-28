@@ -368,6 +368,36 @@ resources:
       key_type: ((key_type))
       path: ((path_alignment_raw))
 
+  - name: vcf-mask-upstream
+    type: git
+    public: true
+    source:
+      uri: https://github.com/W-L/ProblematicSites_SARS-CoV2.git
+      branch: master
+      paths: [problematic_sites_sarsCov2.vcf]
+
+  - name: vcf-mask
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_vcf_mask))
+
+  - name: alignment-mask
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_alignment_mask))
+
 jobs:
   - name: import-gisaid
     public: true
@@ -1143,6 +1173,59 @@ jobs:
       - put: alignment-raw
         params:
           source: outputs/alignment
+
+  - name: copy-vcf-mask
+    public: true
+    plan:
+      - get: covid-ci
+      - get: vcf-mask-upstream
+        trigger: true
+      - task: copy-vcf-mask
+        file: covid-ci/tasks/transfer.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+
+          INPUT_FILE: problematic_sites_sarsCov2.vcf
+          EXTERNAL_DIR: ((path_vcf_mask))
+        input_mapping:
+          input: vcf-mask-upstream
+      - put: vcf-mask
+        params:
+          source: output
+
+  - name: import-vcf-mask
+    public: true
+    plan:
+      - get: covid-ci
+      - get: vcf-mask
+        trigger: true
+        passed: [copy-vcf-mask]
+      - task: import-vcf-mask
+        file: covid-ci/tasks/execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: import
+          Q2_INPUT: input1
+          Q2_TYPE: AlignmentMask
+          Q2_OUTPUT: ((path_alignment_mask))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:05:00
+          SLURM_mem: 4096
+
+        input_mapping:
+          input1: vcf-mask
+      - put: alignment-mask
+        params:
+          source: outputs/result/
 
   - name: export
     public: true
