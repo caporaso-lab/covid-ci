@@ -12,6 +12,10 @@ groups:
       - copy-az-other-metadata
       - clean-az-other-metadata
       - match-az-other-metadata-and-seqs
+      - import-reference
+      - copy-reference-metadata
+      - clean-reference-metadata
+      - match-reference-metadata-and-seqs
       - filter-gisaid
       - merge-focal-seqs
       - sample-neighbors
@@ -25,6 +29,9 @@ groups:
       - merge-seqs
       - create-empress-table
       - align-seqs
+      - copy-vcf-mask
+      - import-vcf-mask
+      - mask-lenient
       - export
   - name: imports
     jobs:
@@ -39,7 +46,13 @@ groups:
       - copy-az-other-metadata
       - clean-az-other-metadata
       - match-az-other-metadata-and-seqs
+      - import-reference
+      - copy-reference-metadata
+      - clean-reference-metadata
+      - match-reference-metadata-and-seqs
       - filter-gisaid
+      - copy-vcf-mask
+      - import-vcf-mask
   - name: results
     jobs:
       - view-gisaid
@@ -182,6 +195,48 @@ resources:
       key_type: ((key_type))
       path: ((path_cleaned_metadata_az_other))
 
+  - name: upload-reference
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 30m
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_upload_reference))
+
+  - name: gsheets-reference
+    type: gsheets-resource
+    public: true
+    check_every: 15m
+    source:
+      file_id: ((reference_metadata_file_id))
+      rev_key: ((reference_metadata_rev_key))
+      credentials: ((service_account))
+
+  - name: metadata-reference
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_metadata_reference))
+
+  - name: cleaned-metadata-reference
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_cleaned_metadata_reference))
+
   - name: seqs-gisaid
     type: simple-remote-directory-resource
     public: true
@@ -214,6 +269,17 @@ resources:
       private_key: ((private_key))
       key_type: ((key_type))
       path: ((path_seqs_az_other))
+
+  - name: seqs-reference
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_seqs_reference))
 
   - name: seqs-az-focal
     type: simple-remote-directory-resource
@@ -409,6 +475,17 @@ resources:
       private_key: ((private_key))
       key_type: ((key_type))
       path: ((path_alignment_mask))
+
+  - name: alignment-masked-lenient
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_alignment_masked_lenient))
 
 jobs:
   - name: import-gisaid
@@ -801,6 +878,119 @@ jobs:
           input1: cleaned-metadata-az-other
           input2: seqs-az-other
 
+  - name: import-reference
+    public: true
+    plan:
+      - get: covid-ci
+      - get: upload-reference
+        trigger: true
+      - task: import-reference
+        file: covid-ci/tasks/execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: import
+          Q2_INPUT: input1
+          Q2_FORMAT: GISAIDDNAFASTAFormat
+          Q2_TYPE: FeatureData[Sequence]
+          Q2_OUTPUT: ((path_seqs_reference))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:05:00
+          SLURM_mem: 4096
+
+        input_mapping:
+          input1: upload-reference
+      - put: seqs-reference
+        params:
+          source: outputs/result/
+
+  - name: copy-reference-metadata
+    public: true
+    plan:
+      - get: covid-ci
+      - get: gsheets-reference
+        trigger: true
+      - task: copy-reference-metadata
+        file: covid-ci/tasks/transfer.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+          EXTERNAL_DIR: ((path_metadata_reference))
+        input_mapping:
+          input: gsheets-reference
+      - put: metadata-reference
+        params:
+          source: output
+
+  - name: clean-reference-metadata
+    public: true
+    plan:
+      - get: covid-ci
+      - get: metadata-reference
+        passed: [copy-reference-metadata]
+        trigger: true
+      - task: clean-reference-metadata
+        file: covid-ci/tasks/execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          SCRIPT: rename_md_col.py
+          SCRIPT_I_input: input1
+          SCRIPT_output: ((path_cleaned_metadata_reference))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:05:00
+          SLURM_mem: 4096
+
+        input_mapping:
+          input1: metadata-reference
+      - put: cleaned-metadata-reference
+        params:
+          source: outputs/result/
+
+  - name: match-reference-metadata-and-seqs
+    public: true
+    plan:
+      - get: covid-ci
+      - get: cleaned-metadata-reference
+        passed: [clean-reference-metadata]
+        trigger: true
+      - get: seqs-reference
+        passed: [import-reference]
+        trigger: true
+      - task: match-reference-metadata-and-seqs
+        file: covid-ci/tasks/execute2.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          SCRIPT: match_md_seqs.py
+          SCRIPT_I_metadata: input1
+          SCRIPT_I_seqs: input2
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:05:00
+          SLURM_mem: 4096
+
+        input_mapping:
+          input1: cleaned-metadata-reference
+          input2: seqs-reference
+
   - name: merge-focal-seqs
     public: true
     plan:
@@ -1057,6 +1247,9 @@ jobs:
       - get: cleaned-metadata-gisaid
         passed: [combine-selections]
         trigger: true
+      - get: cleaned-metadata-reference
+        passed: [match-reference-metadata-and-seqs]
+        trigger: true
       - task: combine-metadata
         file: covid-ci/tasks/execute3.yaml
         params:
@@ -1067,7 +1260,7 @@ jobs:
           WORKDIR: ((workdir))
 
           SCRIPT: concat_md.py
-          SCRIPT_I_md: input1 input2 input3
+          SCRIPT_I_md: input1 input2 input3 input4
           SCRIPT_output: ((path_combined_metadata))
 
           SLURM_cpus_per_task: 1
@@ -1078,6 +1271,7 @@ jobs:
           input1: cleaned-metadata-az-tgen
           input2: cleaned-metadata-az-other
           input3: cleaned-metadata-gisaid
+          input4: cleaned-metadata-reference
       - put: combined-metadata
         params:
           source: outputs/result
@@ -1127,10 +1321,13 @@ jobs:
       - get: subsampled-gisaid-context
         passed: [filter-to-subsample]
         trigger: true
+      - get: seqs-reference
+        passed: [match-reference-metadata-and-seqs]
+        trigger: true
       - get: combined-metadata
         passed: [filter-to-subsample]
       - task: merge-seqs
-        file: covid-ci/tasks/execute2.yaml
+        file: covid-ci/tasks/execute3.yaml
         params:
           HOSTNAME: ((hostname))
           USERNAME: ((username))
@@ -1139,7 +1336,7 @@ jobs:
           WORKDIR: ((workdir))
 
           Q2_ACTION: feature_table::merge_seqs
-          Q2_I_data: input1 input2
+          Q2_I_data: input1 input2 input3
           Q2_O_merged_data: ((path_seqs_final))
 
           SLURM_cpus_per_task: 1
@@ -1149,6 +1346,7 @@ jobs:
         input_mapping:
           input1: seqs-az-focal
           input2: subsampled-gisaid-context
+          input3: seqs-reference
       - put: seqs-final
         params:
           source: outputs/merged_data/
@@ -1207,7 +1405,7 @@ jobs:
           Q2_O_alignment: ((path_alignment_raw))
 
           SLURM_cpus_per_task: 24
-          SLURM_time: "4:00:00"
+          SLURM_time: "12:30:00"
           SLURM_mem: 65536
 
         input_mapping:
@@ -1268,6 +1466,43 @@ jobs:
       - put: alignment-mask
         params:
           source: outputs/result/
+
+  - name: mask-lenient
+    public: true
+    plan:
+      - get: covid-ci
+      - get: alignment-raw
+        passed: [align-seqs]
+        trigger: true
+      - get: alignment-mask
+        passed: [import-vcf-mask]
+        trigger: true
+      - task: mask-lenient
+        file: covid-ci/tasks/execute2.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: genome_sampler::mask
+          Q2_I_alignment: input1
+          Q2_I_mask: input2
+          Q2_P_level: mask
+          Q2_P_mask_terminal_gaps: True
+          Q2_O_masked_alignment: ((path_alignment_masked_lenient))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:20:00
+          SLURM_mem: 16384
+
+        input_mapping:
+          input1: alignment-raw
+          input2: alignment-mask
+      - put: alignment-masked-lenient
+        params:
+          source: outputs/masked_alignment/
 
   - name: export
     public: true
