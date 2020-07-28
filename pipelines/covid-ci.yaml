@@ -23,6 +23,7 @@ groups:
       - summarize-selections
       - filter-to-subsample
       - merge-seqs
+      - create-empress-table
       - align-seqs
       - export
   - name: imports
@@ -334,6 +335,17 @@ resources:
       private_key: ((private_key))
       key_type: ((key_type))
       path: ((path_seqs_final))
+
+  - name: empress-table
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_empress_table))
 
   - name: seqs-final-fasta
     type: simple-remote-directory-resource
@@ -1110,6 +1122,36 @@ jobs:
       - put: seqs-final
         params:
           source: outputs/merged_data/
+
+  - name: create-empress-table
+    public: true
+    plan:
+      - get: covid-ci
+      - get: seqs-final
+        passed: [merge-seqs]
+        trigger: true
+      - task: create-empress-table
+        file: covid-ci/tasks/execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          SCRIPT: diagonal_matrix.py
+          SCRIPT_I_input: input1
+          SCRIPT_O_output: ((path_empress_table))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:10:00
+          SLURM_mem: 16384
+
+        input_mapping:
+          input1: seqs-final
+      - put: empress-table
+        params:
+          source: outputs/result/
 
   - name: align-seqs
     public: true
