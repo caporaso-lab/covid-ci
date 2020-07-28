@@ -1250,6 +1250,8 @@ jobs:
       - get: cleaned-metadata-reference
         passed: [match-reference-metadata-and-seqs]
         trigger: true
+      - get: seqs-reference
+        passed: [match-reference-metadata-and-seqs]
       - task: combine-metadata
         file: covid-ci/tasks/execute3.yaml
         params:
@@ -1285,8 +1287,6 @@ jobs:
       - get: selection-final
         passed: [combine-selections]
         trigger: true
-      - get: combined-metadata
-        passed: [combine-metadata]
       - task: filter-to-subsample
         file: covid-ci/tasks/execute2.yaml
         params:
@@ -1322,10 +1322,10 @@ jobs:
         passed: [filter-to-subsample]
         trigger: true
       - get: seqs-reference
-        passed: [match-reference-metadata-and-seqs]
+        passed: [combine-metadata]
         trigger: true
       - get: combined-metadata
-        passed: [filter-to-subsample]
+        passed: [combine-metadata]
       - task: merge-seqs
         file: covid-ci/tasks/execute3.yaml
         params:
@@ -1477,6 +1477,8 @@ jobs:
       - get: alignment-mask
         passed: [import-vcf-mask]
         trigger: true
+      - get: combined-metadata
+        passed: [align-seqs]
       - task: mask-lenient
         file: covid-ci/tasks/execute2.yaml
         params:

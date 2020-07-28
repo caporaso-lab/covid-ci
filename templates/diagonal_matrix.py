@@ -16,7 +16,7 @@ matrix = Table(diags([1], 0, shape=(len(ids), len(ids))), observation_ids=ids,
                sample_ids=ids)
 art = Artifact.import_data('FeatureTable[Frequency]', matrix)
 
-path = os.path.join('{{ output }}', os.path.basename(input_))
+path = os.path.join('{{ output }}', str(art.uuid) + '.qza')
 art.save(path)
 
 with open(os.path.join(os.getcwd(), 'manifest.json'), 'w') as fh:
