@@ -1253,7 +1253,7 @@ jobs:
       - get: seqs-reference
         passed: [match-reference-metadata-and-seqs]
       - task: combine-metadata
-        file: covid-ci/tasks/execute3.yaml
+        file: covid-ci/tasks/execute4.yaml
         params:
           HOSTNAME: ((hostname))
           USERNAME: ((username))
