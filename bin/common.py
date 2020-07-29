@@ -101,8 +101,15 @@ def _pop_strip(mapping, search):
 
 
 def _split_values(dict_, delimiter):
-    return {k:(v.split(delimiter) if delimiter in v else v)
-            for k,v in dict_.items()}
+    result = {}
+    for key, value in dict_.items():
+        if value.startswith('++NOLIST++ '):
+            result[key] = value[len('++NOLIST++ '):]
+        elif delimiter in value:
+            result[key] = value.split(delimiter)
+        else:
+            result[key] = value
+    return result
 
 
 def deref_block(block):

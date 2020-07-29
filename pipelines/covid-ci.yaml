@@ -34,7 +34,7 @@ groups:
       - mask-lenient
       - label-unaligned-seqs
       - export-unaligned
-  - name: imports
+  - name: imports-all
     jobs:
       - import-gisaid
       - clean-gisaid-metadata
@@ -52,6 +52,32 @@ groups:
       - clean-reference-metadata
       - match-reference-metadata-and-seqs
       - filter-gisaid
+      - copy-vcf-mask
+      - import-vcf-mask
+  - name: import-tgen
+    jobs:
+      - import-az-tgen
+      - copy-tgen-metadata
+      - clean-tgen-metadata
+      - match-tgen-metadata-and-seqs
+  - name: import-az-other
+    jobs:
+      - import-az-other
+      - copy-az-other-metadata
+      - clean-az-other-metadata
+      - match-az-other-metadata-and-seqs
+  - name: import-gisaid
+    jobs:
+      - import-gisaid
+      - clean-gisaid-metadata
+      - match-gisaid
+      - filter-gisaid
+  - name: import-reference
+    jobs:
+      - import-reference
+      - copy-reference-metadata
+      - clean-reference-metadata
+      - match-reference-metadata-and-seqs
       - copy-vcf-mask
       - import-vcf-mask
   - name: results
@@ -584,7 +610,7 @@ jobs:
           Q2_ACTION: feature_table::filter_seqs
           Q2_I_data: input1
           Q2_M_metadata: input2
-          Q2_P_where: "[division]!='Arizona'"
+          Q2_P_where: ++NOLIST++ [division] != 'Arizona' AND [host] = 'Human'
           Q2_O_filtered_data: ((path_seqs_gisaid_matched))
 
           SLURM_cpus_per_task: 1
@@ -1336,8 +1362,6 @@ jobs:
       - get: seqs-reference
         passed: [combine-metadata]
         trigger: true
-      - get: combined-metadata
-        passed: [combine-metadata]
       - task: merge-seqs
         file: covid-ci/tasks/execute3.yaml
         params:
@@ -1400,8 +1424,6 @@ jobs:
       - get: seqs-final
         passed: [merge-seqs]
         trigger: true
-      - get: combined-metadata
-        passed: [merge-seqs]
       - task: align-seqs
         file: covid-ci/tasks/execute1.yaml
         params:
@@ -1489,8 +1511,6 @@ jobs:
       - get: alignment-mask
         passed: [import-vcf-mask]
         trigger: true
-      - get: combined-metadata
-        passed: [align-seqs]
       - task: mask-lenient
         file: covid-ci/tasks/execute2.yaml
         params:
@@ -1526,7 +1546,7 @@ jobs:
         passed: [merge-seqs]
         trigger: true
       - get: combined-metadata
-        passed: [merge-seqs]
+        passed: [combine-metadata]
         trigger: true
       - task: label-unaligned-seqs
         file: covid-ci/tasks/execute2.yaml
@@ -1537,7 +1557,7 @@ jobs:
           KEY_TYPE: ((key_type))
           WORKDIR: ((workdir))
 
-          Q2_ACTION: genome_sampler::label_seqs
+          Q2_ACTION: genome_sampler::label_unaligned_seqs
           Q2_I_seqs: input1
           Q2_M_metadata: input2
           Q2_P_delimiter: '|'
