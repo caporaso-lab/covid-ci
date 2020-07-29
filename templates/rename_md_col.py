@@ -19,7 +19,9 @@ if 'gisaid_epi_isl' in df.columns:
     non_epi_ids = ~new_df['gisaid_epi_isl'].str.startswith('EPI_')
     new_df['gisaid_epi_isl'].loc[non_epi_ids] = None
 
+
 new_df['submitting_lab'] = df['submitting_lab']
+new_df['host'] = df['host']
 new_df['region'] = df['region'].str.replace(' ', '')
 new_df['country'] = df['country'].str.replace(' ', '')
 new_df['division'] = df['division'].str.replace(' ', '')
