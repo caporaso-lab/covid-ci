@@ -32,7 +32,8 @@ groups:
       - copy-vcf-mask
       - import-vcf-mask
       - mask-lenient
-      - export
+      - label-unaligned-seqs
+      - export-unaligned
   - name: imports
     jobs:
       - import-gisaid
@@ -57,7 +58,7 @@ groups:
     jobs:
       - view-gisaid
       - summarize-selections
-      - export
+      - export-unaligned
 
 resource_types:
   - name: simple-remote-directory-resource
@@ -413,7 +414,7 @@ resources:
       key_type: ((key_type))
       path: ((path_empress_table))
 
-  - name: seqs-final-fasta
+  - name: seqs-unaligned-labeled
     type: simple-remote-directory-resource
     public: true
     check_every: 48h
@@ -422,7 +423,18 @@ resources:
       username: ((username))
       private_key: ((private_key))
       key_type: ((key_type))
-      path: ((path_seqs_final_fasta))
+      path: ((path_seqs_unaligned_labeled))
+
+  - name: seqs-unaligned-fasta
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_seqs_unaligned_fasta))
 
   - name: combined-metadata
     type: simple-remote-directory-resource
@@ -1369,7 +1381,7 @@ jobs:
 
           SCRIPT: diagonal_matrix.py
           SCRIPT_I_input: input1
-          SCRIPT_O_output: ((path_empress_table))
+          SCRIPT_output: ((path_empress_table))
 
           SLURM_cpus_per_task: 1
           SLURM_time: 0:10:00
@@ -1506,14 +1518,51 @@ jobs:
         params:
           source: outputs/masked_alignment/
 
-  - name: export
+  - name: label-unaligned-seqs
     public: true
     plan:
       - get: covid-ci
       - get: seqs-final
         passed: [merge-seqs]
         trigger: true
-      - task: export
+      - get: combined-metadata
+        passed: [merge-seqs]
+        trigger: true
+      - task: label-unaligned-seqs
+        file: covid-ci/tasks/execute2.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: genome_sampler::label_seqs
+          Q2_I_seqs: input1
+          Q2_M_metadata: input2
+          Q2_P_delimiter: '|'
+          Q2_P_columns: region country division date
+          Q2_O_labeled_seqs: ((path_seqs_unaligned_labeled))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:10:00
+          SLURM_mem: 16384
+
+        input_mapping:
+          input1: seqs-final
+          input2: combined-metadata
+      - put: seqs-unaligned-labeled
+        params:
+          source: outputs/labeled_seqs/
+
+  - name: export-unaligned
+    public: true
+    plan:
+      - get: covid-ci
+      - get: seqs-unaligned-labeled
+        passed: [label-unaligned-seqs]
+        trigger: true
+      - task: export-unaligned
         file: covid-ci/tasks/execute1.yaml
         params:
           HOSTNAME: ((hostname))
@@ -1526,14 +1575,14 @@ jobs:
           Q2_INPUT: input1
           Q2_FORMAT: DNAFASTAFormat
           Q2_EXT: .fasta
-          Q2_OUTPUT: ((path_seqs_final_fasta))
+          Q2_OUTPUT: ((path_seqs_unaligned_fasta))
 
           SLURM_cpus_per_task: 1
           SLURM_time: 0:15:00
           SLURM_mem: 16384
 
         input_mapping:
-          input1: seqs-final
-      - put: seqs-final-fasta
+          input1: seqs-unaligned-labeled
+      - put: seqs-unaligned-fasta
         params:
           source: outputs/result/
