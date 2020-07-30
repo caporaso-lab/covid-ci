@@ -21,7 +21,6 @@ groups:
       - sample-neighbors
       - sample-longitudinal
       - sample-diversity
-      - view-gisaid
       - combine-selections
       - combine-metadata
       - summarize-selections
@@ -32,8 +31,19 @@ groups:
       - copy-vcf-mask
       - import-vcf-mask
       - mask-lenient
+      - mask-stringent
+      - iqtree-lenient
+      - iqtree-stringent
+      - root-lenient
+      - root-stringent
+      - empress-stringent
+      - empress-lenient
       - label-unaligned-seqs
       - export-unaligned
+      - label-lenient
+      - export-lenient
+      - label-stringent
+      - export-stringent
   - name: imports-all
     jobs:
       - import-gisaid
@@ -82,9 +92,16 @@ groups:
       - import-vcf-mask
   - name: results
     jobs:
-      - view-gisaid
       - summarize-selections
+      - label-unaligned-seqs
       - export-unaligned
+      - label-lenient
+      - export-lenient
+      - label-stringent
+      - export-stringent
+      - empress-stringent
+      - empress-lenient
+
 
 resource_types:
   - name: simple-remote-directory-resource
@@ -341,17 +358,6 @@ resources:
       key_type: ((key_type))
       path: ((path_seqs_gisaid_context))
 
-  - name: view-seqs-gisaid
-    type: simple-remote-directory-resource
-    public: true
-    check_every: 48h
-    source:
-      hostname: ((hostname))
-      username: ((username))
-      private_key: ((private_key))
-      key_type: ((key_type))
-      path: ((path_view_seqs_gisaid))
-
   - name: selection-longitudinal
     type: simple-remote-directory-resource
     public: true
@@ -525,6 +531,127 @@ resources:
       key_type: ((key_type))
       path: ((path_alignment_masked_lenient))
 
+  - name: alignment-masked-stringent
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_alignment_masked_stringent))
+
+  - name: tree-ml-lenient
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_tree_ml_lenient))
+
+  - name: tree-ml-stringent
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_tree_ml_stringent))
+
+  - name: tree-rooted-lenient
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_tree_rooted_lenient))
+
+  - name: tree-rooted-stringent
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_tree_rooted_stringent))
+
+  - name: view-empress-lenient
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_view_empress_lenient))
+
+  - name: view-empress-stringent
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_view_empress_stringent))
+
+  - name: alignment-labeled-lenient
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_alignment_labeled_lenient))
+
+  - name: export-alignment-lenient
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_export_alignment_lenient))
+
+  - name: alignment-labeled-stringent
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_alignment_labeled_stringent))
+
+  - name: export-alignment-stringent
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_export_alignment_stringent))
+
 jobs:
   - name: import-gisaid
     public: true
@@ -657,36 +784,6 @@ jobs:
       - put: seqs-gisaid-context
         params:
           source: outputs/filtered_sequences/
-
-  - name: view-gisaid
-    public: true
-    plan:
-      - get: covid-ci
-      - get: seqs-gisaid-context
-        passed: [filter-gisaid]
-        trigger: true
-      - task: view-gisaid
-        file: covid-ci/tasks/execute1.yaml
-        params:
-          HOSTNAME: ((hostname))
-          USERNAME: ((username))
-          PRIVATE_KEY: ((private_key))
-          KEY_TYPE: ((key_type))
-          WORKDIR: ((workdir))
-
-          Q2_ACTION: feature_table::tabulate_seqs
-          Q2_I_data: input1
-          Q2_O_visualization: ((path_view_seqs_gisaid))
-
-          SLURM_cpus_per_task: 1
-          SLURM_time: 1:15:00
-          SLURM_mem: 16384
-
-        input_mapping:
-          input1: seqs-gisaid-context
-      - put: view-seqs-gisaid
-        params:
-          source: outputs/visualization/
 
   - name: import-az-tgen
     public: true
@@ -1288,8 +1385,6 @@ jobs:
       - get: cleaned-metadata-reference
         passed: [match-reference-metadata-and-seqs]
         trigger: true
-      - get: seqs-reference
-        passed: [match-reference-metadata-and-seqs]
       - task: combine-metadata
         file: covid-ci/tasks/execute4.yaml
         params:
@@ -1360,7 +1455,7 @@ jobs:
         passed: [filter-to-subsample]
         trigger: true
       - get: seqs-reference
-        passed: [combine-metadata]
+        passed: [match-reference-metadata-and-seqs]
         trigger: true
       - task: merge-seqs
         file: covid-ci/tasks/execute3.yaml
@@ -1538,6 +1633,241 @@ jobs:
         params:
           source: outputs/masked_alignment/
 
+  - name: mask-stringent
+    public: true
+    plan:
+      - get: covid-ci
+      - get: alignment-raw
+        passed: [align-seqs]
+        trigger: true
+      - get: alignment-mask
+        passed: [import-vcf-mask]
+        trigger: true
+      - task: mask-stringent
+        file: covid-ci/tasks/execute2.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: genome_sampler::mask
+          Q2_I_alignment: input1
+          Q2_I_mask: input2
+          Q2_P_level: caution
+          Q2_P_mask_terminal_gaps: True
+          Q2_O_masked_alignment: ((path_alignment_masked_stringent))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:20:00
+          SLURM_mem: 16384
+
+        input_mapping:
+          input1: alignment-raw
+          input2: alignment-mask
+      - put: alignment-masked-stringent
+        params:
+          source: outputs/masked_alignment/
+
+  - name: iqtree-lenient
+    public: true
+    plan:
+      - get: covid-ci
+      - get: alignment-masked-lenient
+        passed: [mask-lenient]
+        trigger: true
+      - task: iqtree-lenient
+        file: covid-ci/tasks/execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: phylogeny::iqtree
+          Q2_I_alignment: input1
+          Q2_P_n_cores: 24
+          Q2_O_tree: ((path_tree_ml_lenient))
+
+          SLURM_cpus_per_task: 24
+          SLURM_time: 48:00:00
+          SLURM_mem: 65536
+
+        input_mapping:
+          input1: alignment-masked-lenient
+      - put: tree-ml-lenient
+        params:
+          source: outputs/tree/
+
+  - name: iqtree-stringent
+    public: true
+    plan:
+      - get: covid-ci
+      - get: alignment-masked-stringent
+        passed: [mask-stringent]
+        trigger: true
+      - task: iqtree-stringent
+        file: covid-ci/tasks/execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: phylogeny::iqtree
+          Q2_I_alignment: input1
+          Q2_P_n_cores: 24
+          Q2_O_tree: ((path_tree_ml_stringent))
+
+          SLURM_cpus_per_task: 24
+          SLURM_time: 48:00:00
+          SLURM_mem: 65536
+
+        input_mapping:
+          input1: alignment-masked-stringent
+      - put: tree-ml-stringent
+        params:
+          source: outputs/tree/
+
+  - name: root-lenient
+    public: true
+    plan:
+      - get: covid-ci
+      - get: tree-ml-lenient
+        passed: [iqtree-lenient]
+        trigger: true
+      - task: root-lenient
+        file: covid-ci/tasks/execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: phylogeny::midpoint_root
+          Q2_I_tree: input1
+          Q2_O_rooted_tree: ((path_tree_rooted_lenient))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 00:20:00
+          SLURM_mem: 16384
+
+        input_mapping:
+          input1: tree-ml-lenient
+      - put: tree-rooted-lenient
+        params:
+          source: outputs/rooted_tree/
+          
+  - name: root-stringent
+    public: true
+    plan:
+      - get: covid-ci
+      - get: tree-ml-stringent
+        passed: [iqtree-stringent]
+        trigger: true
+      - task: root-stringent
+        file: covid-ci/tasks/execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: phylogeny::midpoint_root
+          Q2_I_tree: input1
+          Q2_O_rooted_tree: ((path_tree_rooted_stringent))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 00:20:00
+          SLURM_mem: 16384
+
+        input_mapping:
+          input1: tree-ml-stringent
+      - put: tree-rooted-stringent
+        params:
+          source: outputs/rooted_tree/
+
+  - name: empress-lenient
+    public: true
+    plan:
+      - get: covid-ci
+      - get: tree-rooted-lenient
+        passed: [root-lenient]
+        trigger: true
+      - get: empress-table
+        passed: [create-empress-table]
+      - get: combined-metadata
+        passed: [combine-metadata]
+        trigger: true
+      - task: root-lenient
+        file: covid-ci/tasks/execute3.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: empress::plot
+          Q2_I_tree: input1
+          Q2_I_feature_table: input2
+          Q2_M_sample_metadata: input3
+          Q2_O_visualization: ((path_view_empress_lenient))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 00:20:00
+          SLURM_mem: 16384
+        input_mapping:
+          input1: tree-rooted-lenient
+          input2: empress-table
+          input3: combined-metadata
+      - put: view-empress-lenient
+        params:
+          source: outputs/visualization/
+
+  - name: empress-stringent
+    public: true
+    plan:
+      - get: covid-ci
+      - get: tree-rooted-stringent
+        passed: [root-stringent]
+        trigger: true
+      - get: empress-table
+        passed: [create-empress-table]
+      - get: combined-metadata
+        passed: [combine-metadata]
+        trigger: true
+      - task: root-stringent
+        file: covid-ci/tasks/execute3.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: empress::plot
+          Q2_I_tree: input1
+          Q2_I_feature_table: input2
+          Q2_M_sample_metadata: input3
+          Q2_O_visualization: ((path_view_empress_stringent))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 00:20:00
+          SLURM_mem: 16384
+        input_mapping:
+          input1: tree-rooted-stringent
+          input2: empress-table
+          input3: combined-metadata
+      - put: view-empress-stringent
+        params:
+          source: outputs/visualization/
+
   - name: label-unaligned-seqs
     public: true
     plan:
@@ -1604,5 +1934,143 @@ jobs:
         input_mapping:
           input1: seqs-unaligned-labeled
       - put: seqs-unaligned-fasta
+        params:
+          source: outputs/result/
+
+  - name: label-lenient
+    public: true
+    plan:
+      - get: covid-ci
+      - get: alignment-masked-lenient
+        passed: [mask-lenient]
+        trigger: true
+      - get: combined-metadata
+        passed: [combine-metadata]
+        trigger: true
+      - task: label-lenient
+        file: covid-ci/tasks/execute2.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: genome_sampler::label_seqs
+          Q2_I_seqs: input1
+          Q2_M_metadata: input2
+          Q2_P_delimiter: '|'
+          Q2_P_columns: region country division date
+          Q2_O_labeled_seqs: ((path_alignment_labeled_lenient))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:10:00
+          SLURM_mem: 16384
+
+        input_mapping:
+          input1: alignment-masked-lenient
+          input2: combined-metadata
+      - put: alignment-labeled-lenient
+        params:
+          source: outputs/labeled_seqs/
+
+  - name: export-lenient
+    public: true
+    plan:
+      - get: covid-ci
+      - get: alignment-labeled-lenient
+        passed: [label-lenient]
+        trigger: true
+      - task: export-lenient
+        file: covid-ci/tasks/execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: export
+          Q2_INPUT: input1
+          Q2_FORMAT: AlignedDNAFASTAFormat
+          Q2_EXT: .fasta
+          Q2_OUTPUT: ((path_export_alignment_lenient))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:15:00
+          SLURM_mem: 16384
+
+        input_mapping:
+          input1: alignment-labeled-lenient
+      - put: export-alignment-lenient
+        params:
+          source: outputs/result/
+
+  - name: label-stringent
+    public: true
+    plan:
+      - get: covid-ci
+      - get: alignment-masked-stringent
+        passed: [mask-stringent]
+        trigger: true
+      - get: combined-metadata
+        passed: [combine-metadata]
+        trigger: true
+      - task: label-stringent
+        file: covid-ci/tasks/execute2.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: genome_sampler::label_seqs
+          Q2_I_seqs: input1
+          Q2_M_metadata: input2
+          Q2_P_delimiter: '|'
+          Q2_P_columns: region country division date
+          Q2_O_labeled_seqs: ((path_alignment_labeled_stringent))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:10:00
+          SLURM_mem: 16384
+
+        input_mapping:
+          input1: alignment-masked-stringent
+          input2: combined-metadata
+      - put: alignment-labeled-stringent
+        params:
+          source: outputs/labeled_seqs/
+
+  - name: export-stringent
+    public: true
+    plan:
+      - get: covid-ci
+      - get: alignment-labeled-stringent
+        passed: [label-stringent]
+        trigger: true
+      - task: export-stringent
+        file: covid-ci/tasks/execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: export
+          Q2_INPUT: input1
+          Q2_FORMAT: AlignedDNAFASTAFormat
+          Q2_EXT: .fasta
+          Q2_OUTPUT: ((path_export_alignment_stringent))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:15:00
+          SLURM_mem: 16384
+
+        input_mapping:
+          input1: alignment-labeled-stringent
+      - put: export-alignment-stringent
         params:
           source: outputs/result/
