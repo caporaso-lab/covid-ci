@@ -1891,7 +1891,7 @@ jobs:
           Q2_I_seqs: input1
           Q2_M_metadata: input2
           Q2_P_delimiter: '|'
-          Q2_P_columns: region country division date
+          Q2_P_columns: region country division location date
           Q2_O_labeled_seqs: ((path_seqs_unaligned_labeled))
 
           SLURM_cpus_per_task: 1
@@ -1960,7 +1960,7 @@ jobs:
           Q2_I_seqs: input1
           Q2_M_metadata: input2
           Q2_P_delimiter: '|'
-          Q2_P_columns: region country division date
+          Q2_P_columns: region country division location date
           Q2_O_labeled_seqs: ((path_alignment_labeled_lenient))
 
           SLURM_cpus_per_task: 1
@@ -2029,7 +2029,7 @@ jobs:
           Q2_I_seqs: input1
           Q2_M_metadata: input2
           Q2_P_delimiter: '|'
-          Q2_P_columns: region country division date
+          Q2_P_columns: region country division location date
           Q2_O_labeled_seqs: ((path_alignment_labeled_stringent))
 
           SLURM_cpus_per_task: 1
