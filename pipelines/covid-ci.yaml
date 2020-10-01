@@ -688,7 +688,7 @@ jobs:
 
           SLURM_cpus_per_task: 1
           SLURM_time: 0:30:00
-          SLURM_mem: 16384
+          SLURM_mem: 24576
 
         input_mapping:
           input1: upload-gisaid
