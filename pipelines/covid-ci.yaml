@@ -18,6 +18,7 @@ groups:
       - match-reference-metadata-and-seqs
       - filter-gisaid
       - merge-focal-seqs
+      - filter-az-seqs
       - sample-neighbors
       - sample-longitudinal
       - sample-diversity
@@ -324,6 +325,17 @@ resources:
       private_key: ((private_key))
       key_type: ((key_type))
       path: ((path_seqs_reference))
+
+  - name: seqs-az-merged
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_seqs_az_merged))
 
   - name: seqs-az-focal
     type: simple-remote-directory-resource
@@ -751,6 +763,42 @@ jobs:
         params:
           source: outputs/filtered_data/
 
+  - name: filter-az-seqs
+    public: true
+    plan:
+      - get: covid-ci
+      - get: seqs-az-merged
+        passed: [merge-focal-seqs]
+        trigger: true
+      - get: cleaned-metadata-az-tgen
+        passed: [match-tgen-metadata-and-seqs]
+      - get: cleaned-metadata-az-other
+        passed: [match-az-other-metadata-and-seqs]
+      - task: filter-az-seqs
+        file: covid-ci/tasks/execute1.yaml
+        params:
+          HOSTNAME: ((hostname))
+          USERNAME: ((username))
+          PRIVATE_KEY: ((private_key))
+          KEY_TYPE: ((key_type))
+          WORKDIR: ((workdir))
+
+          Q2_ACTION: genome_sampler::filter_seqs
+          Q2_I_sequences: input1
+          Q2_P_min_length: 20000
+          Q2_P_max_proportion_ambiguous: 0.1
+          Q2_O_filtered_sequences: ((path_seqs_az_focal))
+
+          SLURM_cpus_per_task: 1
+          SLURM_time: 0:35:00
+          SLURM_mem: 4096
+
+        input_mapping:
+          input1: seqs-az-merged
+      - put: seqs-az-focal
+        params:
+          source: outputs/filtered_sequences/
+
   - name: filter-gisaid
     public: true
     plan:
@@ -773,6 +821,7 @@ jobs:
           Q2_ACTION: genome_sampler::filter_seqs
           Q2_I_sequences: input1
           Q2_P_min_length: 20000
+          Q2_P_max_proportion_ambiguous: 0.1
           Q2_O_filtered_sequences: ((path_seqs_gisaid_context))
 
           SLURM_cpus_per_task: 1
@@ -1151,7 +1200,7 @@ jobs:
 
           Q2_ACTION: feature_table::merge_seqs
           Q2_I_data: input1 input2
-          Q2_O_merged_data: ((path_seqs_az_focal))
+          Q2_O_merged_data: ((path_seqs_az_merged))
 
           SLURM_cpus_per_task: 1
           SLURM_time: 0:15:00
@@ -1160,7 +1209,7 @@ jobs:
         input_mapping:
           input1: seqs-az-tgen
           input2: seqs-az-other
-      - put: seqs-az-focal
+      - put: seqs-az-merged
         params:
           source: outputs/merged_data/
 
@@ -1242,7 +1291,7 @@ jobs:
         passed: [filter-gisaid]
         trigger: true
       - get: seqs-az-focal
-        passed: [merge-focal-seqs]
+        passed: [filter-az-seqs]
         trigger: true
       - get: cleaned-metadata-gisaid
         passed: [filter-gisaid]
