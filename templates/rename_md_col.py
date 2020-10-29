@@ -34,7 +34,14 @@ new_df['combined_location'] = \
 
 new_df['date'] = df['date']
 
-new_df = new_df.loc[new_df['date'].str.count('-') == 2]
+full_dates = new_df['date'].str.count('-') == 2
+
+if (~full_dates).any():
+    print("Missing complete dates for the following ids:", flush=True)
+for id_ in new_df['id'][~full_dates]:
+    print('  ' + id_, flush=True)
+
+new_df = new_df.loc[full_dates]
 
 path = os.path.join('{{ output }}', os.path.basename(input_))
 if path.endswith('.gz'):

@@ -293,6 +293,17 @@ resources:
       key_type: ((key_type))
       path: ((path_seqs_gisaid))
 
+  - name: seqs-az-tgen-unmatched
+    type: simple-remote-directory-resource
+    public: true
+    check_every: 48h
+    source:
+      hostname: ((hostname))
+      username: ((username))
+      private_key: ((private_key))
+      key_type: ((key_type))
+      path: ((path_seqs_az_tgen_unmatched))
+
   - name: seqs-az-tgen
     type: simple-remote-directory-resource
     public: true
@@ -853,7 +864,7 @@ jobs:
           Q2_INPUT: input1
           Q2_FORMAT: GISAIDDNAFASTAFormat
           Q2_TYPE: FeatureData[Sequence]
-          Q2_OUTPUT: ((path_seqs_az_tgen))
+          Q2_OUTPUT: ((path_seqs_az_tgen_unmatched))
 
           SLURM_cpus_per_task: 1
           SLURM_time: 0:15:00
@@ -861,7 +872,7 @@ jobs:
 
         input_mapping:
           input1: upload-az-tgen
-      - put: seqs-az-tgen
+      - put: seqs-az-tgen-unmatched
         params:
           source: outputs/result/
 
@@ -924,7 +935,7 @@ jobs:
       - get: cleaned-metadata-az-tgen
         passed: [clean-tgen-metadata]
         trigger: true
-      - get: seqs-az-tgen
+      - get: seqs-az-tgen-unmatched
         passed: [import-az-tgen]
         trigger: true
       - task: match-tgen-metadata-and-seqs
@@ -936,17 +947,21 @@ jobs:
           KEY_TYPE: ((key_type))
           WORKDIR: ((workdir))
 
-          SCRIPT: match_md_seqs.py
-          SCRIPT_I_metadata: input1
-          SCRIPT_I_seqs: input2
+          Q2_ACTION: feature_table::filter_seqs
+          Q2_I_data: input1
+          Q2_M_metadata: input2
+          Q2_O_filtered_data: ((path_seqs_az_tgen))
 
           SLURM_cpus_per_task: 1
-          SLURM_time: 0:15:00
+          SLURM_time: 0:30:00
           SLURM_mem: 4096
 
         input_mapping:
-          input1: cleaned-metadata-az-tgen
-          input2: seqs-az-tgen
+          input1: seqs-az-tgen-unmatched
+          input2: cleaned-metadata-az-tgen
+      - put: seqs-az-tgen
+        params:
+          source: outputs/filtered_data/
 
   - name: import-az-other
     public: true
