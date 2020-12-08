@@ -699,7 +699,7 @@ jobs:
 
           SLURM_cpus_per_task: 1
           SLURM_time: 0:30:00
-          SLURM_mem: 24576
+          SLURM_mem: 48576
 
         input_mapping:
           input1: upload-gisaid
@@ -765,7 +765,7 @@ jobs:
 
           SLURM_cpus_per_task: 1
           SLURM_time: 0:30:00
-          SLURM_mem: 4096
+          SLURM_mem: 32000
 
         input_mapping:
           input1: seqs-gisaid
@@ -837,7 +837,7 @@ jobs:
 
           SLURM_cpus_per_task: 1
           SLURM_time: 0:35:00
-          SLURM_mem: 4096
+          SLURM_mem: 32000
 
         input_mapping:
           input1: seqs-gisaid-matched
@@ -1289,7 +1289,7 @@ jobs:
           Q2_O_selection: ((path_selection_diversity))
 
           SLURM_cpus_per_task: 24
-          SLURM_time: 48:00:00
+          SLURM_time: 96:00:00
           SLURM_mem: 65536
 
         input_mapping:
@@ -1330,11 +1330,11 @@ jobs:
           Q2_C_locale: input3::division
           Q2_P_percent_id: .9999
           Q2_P_samples_per_cluster: 3
-          Q2_P_n_threads: 24
+          Q2_P_n_threads: 28
           Q2_O_selection: ((path_selection_neighbors))
 
-          SLURM_cpus_per_task: 24
-          SLURM_time: 5:30:00
+          SLURM_cpus_per_task: 28
+          SLURM_time: 18:30:00
           SLURM_mem: 65536
 
         input_mapping:
@@ -1449,8 +1449,11 @@ jobs:
       - get: cleaned-metadata-reference
         passed: [match-reference-metadata-and-seqs]
         trigger: true
+      - get: selection-final
+        passed: [combine-selections]
+        trigger: true
       - task: combine-metadata
-        file: covid-ci/tasks/execute4.yaml
+        file: covid-ci/tasks/execute5.yaml
         params:
           HOSTNAME: ((hostname))
           USERNAME: ((username))
@@ -1459,7 +1462,9 @@ jobs:
           WORKDIR: ((workdir))
 
           SCRIPT: concat_md.py
-          SCRIPT_I_md: input1 input2 input3 input4
+          SCRIPT_I_context_md: input1
+          SCRIPT_I_md: input2 input3 input4
+          SCRIPT_I_selection: input5
           SCRIPT_output: ((path_combined_metadata))
 
           SLURM_cpus_per_task: 1
@@ -1467,10 +1472,11 @@ jobs:
           SLURM_mem: 4096
 
         input_mapping:
-          input1: cleaned-metadata-az-tgen
-          input2: cleaned-metadata-az-other
-          input3: cleaned-metadata-gisaid
+          input1: cleaned-metadata-gisaid
+          input2: cleaned-metadata-az-tgen
+          input3: cleaned-metadata-az-other
           input4: cleaned-metadata-reference
+          input5: selection-final
       - put: combined-metadata
         params:
           source: outputs/result
@@ -1594,11 +1600,11 @@ jobs:
 
           Q2_ACTION: alignment::mafft
           Q2_I_sequences: input1
-          Q2_P_n_threads: 24
+          Q2_P_n_threads: 28
           Q2_O_alignment: ((path_alignment_raw))
 
-          SLURM_cpus_per_task: 24
-          SLURM_time: "12:30:00"
+          SLURM_cpus_per_task: 28
+          SLURM_time: "72:30:00"
           SLURM_mem: 65536
 
         input_mapping:
@@ -1752,11 +1758,11 @@ jobs:
 
           Q2_ACTION: phylogeny::iqtree
           Q2_I_alignment: input1
-          Q2_P_n_cores: 24
+          Q2_P_n_cores: 28
           Q2_O_tree: ((path_tree_ml_lenient))
 
-          SLURM_cpus_per_task: 24
-          SLURM_time: 48:00:00
+          SLURM_cpus_per_task: 28
+          SLURM_time: 18:00:00
           SLURM_mem: 65536
 
         input_mapping:
@@ -1783,11 +1789,11 @@ jobs:
 
           Q2_ACTION: phylogeny::iqtree
           Q2_I_alignment: input1
-          Q2_P_n_cores: 24
+          Q2_P_n_cores: 28
           Q2_O_tree: ((path_tree_ml_stringent))
 
-          SLURM_cpus_per_task: 24
-          SLURM_time: 48:00:00
+          SLURM_cpus_per_task: 28
+          SLURM_time: 18:00:00
           SLURM_mem: 65536
 
         input_mapping:

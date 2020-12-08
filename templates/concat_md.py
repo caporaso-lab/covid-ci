@@ -5,10 +5,18 @@ import json
 
 import pandas as pd
 
+import qiime2
+
+selection = qiime2.Artifact.load('{{ selection }}')
+sel_ids = selection.view(pd.DataFrame).index
 
 metadata_files = {{ md }}
+context_df = pd.read_csv('{{ context_md }}', sep='\t')
+context_df = context_df[context_df['id'].isin(sel_ids)]
+
 dfs = [pd.read_csv(f, sep='\t') for f in metadata_files]
 
+dfs.append(context_df)
 merged_df = pd.concat(dfs)
 
 path = os.path.join('{{ output }}', 'metadata-' + str(uuid.uuid4()) + '.tsv')
