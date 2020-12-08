@@ -8,7 +8,7 @@ import pandas as pd
 import qiime2
 
 selection = qiime2.Artifact.load('{{ selection }}')
-sel_ids = selection.view(pd.DataFrame).index
+sel_ids = selection.view(qiime2.Metadata).to_dataframe().index
 
 metadata_files = {{ md }}
 context_df = pd.read_csv('{{ context_md }}', sep='\t')
