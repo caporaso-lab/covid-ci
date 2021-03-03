@@ -27,7 +27,7 @@ else:
 if 'host' not in df.columns:
     new_df['host'] = 'Human'
 else:
-    new_df['host'] = df['host'
+    new_df['host'] = df['host']
 
 new_df['region'] = df['region'].str.replace(' ', '')
 new_df['country'] = df['country'].str.replace(' ', '')
