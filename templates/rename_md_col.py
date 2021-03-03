@@ -41,6 +41,8 @@ new_df['combined_location'] = \
 
 new_df['date'] = df['date']
 
+new_df = new_df.loc[new_df['id'].notna()]
+
 full_dates = new_df['date'].str.count('-') == 2
 
 if (~full_dates).any():
