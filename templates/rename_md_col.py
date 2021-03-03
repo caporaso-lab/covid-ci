@@ -24,7 +24,11 @@ if 'submitting_lab' in df.columns:
 else:
     new_df['submitting_lab'] = df['originating_lab']
 
-new_df['host'] = df['host']
+if 'host' not in df.columns:
+    new_df['host'] = 'Human'
+else:
+    new_df['host'] = df['host'
+
 new_df['region'] = df['region'].str.replace(' ', '')
 new_df['country'] = df['country'].str.replace(' ', '')
 new_df['division'] = df['division'].str.replace(' ', '')
