@@ -15,7 +15,7 @@ new_df = pd.DataFrame()
 new_df['id'] = df['strain']
 
 if 'gisaid_epi_isl' in df.columns:
-    new_df['gisaid_epi_isl'] = df['gisaid_epi_isl']
+    new_df['gisaid_epi_isl'] = df['gisaid_epi_isl'].fillna('')
     non_epi_ids = ~new_df['gisaid_epi_isl'].str.startswith('EPI_')
     new_df['gisaid_epi_isl'].loc[non_epi_ids] = None
 
