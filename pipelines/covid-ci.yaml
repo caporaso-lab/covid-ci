@@ -698,8 +698,8 @@ jobs:
           Q2_OUTPUT: ((path_seqs_gisaid))
 
           SLURM_cpus_per_task: 1
-          SLURM_time: 0:30:00
-          SLURM_mem: 48576
+          SLURM_time: 3:30:00
+          SLURM_mem: 12000
 
         input_mapping:
           input1: upload-gisaid
@@ -764,8 +764,8 @@ jobs:
           Q2_O_filtered_data: ((path_seqs_gisaid_matched))
 
           SLURM_cpus_per_task: 1
-          SLURM_time: 0:30:00
-          SLURM_mem: 32000
+          SLURM_time: 2:30:00
+          SLURM_mem: 92000
 
         input_mapping:
           input1: seqs-gisaid
@@ -801,8 +801,8 @@ jobs:
           Q2_O_filtered_sequences: ((path_seqs_az_focal))
 
           SLURM_cpus_per_task: 1
-          SLURM_time: 0:35:00
-          SLURM_mem: 4096
+          SLURM_time: 1:35:00
+          SLURM_mem: 8096
 
         input_mapping:
           input1: seqs-az-merged
@@ -836,8 +836,8 @@ jobs:
           Q2_O_filtered_sequences: ((path_seqs_gisaid_context))
 
           SLURM_cpus_per_task: 1
-          SLURM_time: 0:35:00
-          SLURM_mem: 32000
+          SLURM_time: 1:35:00
+          SLURM_mem: 62000
 
         input_mapping:
           input1: seqs-gisaid-matched
@@ -1257,7 +1257,7 @@ jobs:
 
           SLURM_cpus_per_task: 1
           SLURM_time: 0:20:00
-          SLURM_mem: 4096
+          SLURM_mem: 12096
 
         input_mapping:
           input1: seqs-gisaid-context
@@ -1334,7 +1334,7 @@ jobs:
           Q2_O_selection: ((path_selection_neighbors))
 
           SLURM_cpus_per_task: 28
-          SLURM_time: 18:30:00
+          SLURM_time: 36:30:00
           SLURM_mem: 65536
 
         input_mapping:
