@@ -1957,7 +1957,7 @@ jobs:
           KEY_TYPE: ((key_type))
           WORKDIR: ((workdir))
 
-          Q2_ACTION: genome_sampler::label_unaligned_seqs
+          Q2_ACTION: genome_sampler::label_seqs
           Q2_I_seqs: input1
           Q2_M_metadata: input2
           Q2_P_delimiter: '|'
