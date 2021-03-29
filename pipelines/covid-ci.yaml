@@ -1438,10 +1438,10 @@ jobs:
     plan:
       - get: covid-ci
       - get: cleaned-metadata-az-tgen
-        passed: [combine-selections]
+        #passed: [combine-selections]
         trigger: true
       - get: cleaned-metadata-az-other
-        passed: [combine-selections]
+        #passed: [combine-selections]
         trigger: true
       - get: cleaned-metadata-gisaid
         passed: [combine-selections]
