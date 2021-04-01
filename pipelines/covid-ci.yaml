@@ -867,7 +867,7 @@ jobs:
           Q2_OUTPUT: ((path_seqs_az_tgen_unmatched))
 
           SLURM_cpus_per_task: 1
-          SLURM_time: 0:15:00
+          SLURM_time: 0:45:00
           SLURM_mem: 4096
 
         input_mapping:
@@ -918,7 +918,7 @@ jobs:
           SCRIPT_output: ((path_cleaned_metadata_az_tgen))
 
           SLURM_cpus_per_task: 1
-          SLURM_time: 0:05:00
+          SLURM_time: 0:25:00
           SLURM_mem: 4096
 
         input_mapping:
