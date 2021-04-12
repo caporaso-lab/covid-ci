@@ -4,6 +4,7 @@ import tarfile
 import collections
 import pandas as pd
 from sys import argv
+import skbio.io
 
 def _file_handle_from_tar_fp(archive_fp, target_file_extension):
     archive_f = tarfile.open(archive_fp, mode='r')
@@ -30,19 +31,19 @@ def _process_gisaid(sequences_f, md_f, dl_f, output_sequences_fp,
                     output_metadata_fp, verbose=True, test_run=False):
 
     genome_metadata_fields = ['id', 
-                            'metadata_id',
-                            'fasta_id',
-                            'collection_date',
-                            'submission_date',
-                            'full_location',
-                            'location1',
-                            'location2',
-                            'location3',
-                            'location4',
-                            'location5',
-                            'location6',
-                            'location7',
-                            'host']
+                             'metadata_id',
+                             'fasta_id',
+                             'collection_date',
+                             'submission_date',
+                             'full_location',
+                             'location1',
+                             'location2',
+                             'location3',
+                             'location4',
+                             'location5',
+                             'location6',
+                             'location7',
+                             'host']
     GenomeMetadata = collections.namedtuple('GenomeMetadata', genome_metadata_fields)
 
     # skip the header line (though ultimately we should use this to id columns of interest)
@@ -53,21 +54,15 @@ def _process_gisaid(sequences_f, md_f, dl_f, output_sequences_fp,
 
     processed_records = 0
     with open(output_sequences_fp, 'w') as output_seqs_f:
-        for md_line, dl_line in zip(md_f, dl_f):
+        for md_line, dl_line, seq in zip(md_f, dl_f, skbio.io.read(sequences_f, format='fasta')):
+            
             if test_run and processed_records == 100:
                 break
+            
             md_line = md_line.decode(encoding='UTF-8')
             dl_line = dl_line.decode(encoding='UTF-8')
-            for seqs_line in sequences_f:
-                seqs_line = seqs_line.decode(encoding='UTF-8')
-                if seqs_line.startswith('>'):
-                    processed_records += 1
-                    break
-                else:
-                    output_seqs_f.write(seqs_line)
 
-            seqs_line = seqs_line.strip()
-            fasta_id = seqs_line[1:]
+            fasta_id = ' '.join([seq.metadata['id'], seq.metadata['description']])
 
             md_fields = md_line.split('\t')
             md_id = md_fields[0]
@@ -95,6 +90,8 @@ def _process_gisaid(sequences_f, md_f, dl_f, output_sequences_fp,
                 print('💩 : date label (%s) is inconsistent with fasta id %s' %
                         (date_label, fasta_id))
             else:
+                seq.metadata['id'] = accession_id
+                seq.metadata['description'] = ''
                 genome_metadata[accession_id] = \
                     GenomeMetadata(id=accession_id, collection_date=collection_date,
                                 full_location=location, submission_date=submission_date, 
@@ -103,7 +100,8 @@ def _process_gisaid(sequences_f, md_f, dl_f, output_sequences_fp,
                                 location3=split_location[2], location4=split_location[3],
                                 location5=split_location[4], location6=split_location[5],
                                 location7=split_location[6], host=None)
-                output_seqs_f.write('>%s\n' % accession_id)
+                seq.write(output_seqs_f)
+            processed_records += 1
     
     metadata = pd.DataFrame(genome_metadata.values(), columns=genome_metadata_fields).set_index('id')
     metadata.to_csv(output_metadata_fp, sep='\t')
@@ -112,10 +110,10 @@ def _process_gisaid(sequences_f, md_f, dl_f, output_sequences_fp,
 
 if __name__ == "__main__":
     usage = ("process_gisaid.py input-sequences-path "
-            "input-dates-and-locations-path input-metadata-path "
-            "output-sequences-path output-metadata-path")
+             "input-dates-and-locations-path input-metadata-path "
+             "output-sequences-path output-metadata-path")
     
-    test_run = True
+    test_run = False
     
     if len(argv) == 2 and argv[1] == '--help':
         print(usage)
