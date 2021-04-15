@@ -31,7 +31,7 @@ else:
 
 new_df['region'] = df['region'].str.replace(' ', '')
 new_df['country'] = df['country'].str.replace(' ', '')
-new_df['division'] = df['divsion'].str.replace(' ', '')
+new_df['division'] = df['division'].str.replace(' ', '')
 new_df['location'] = df['location'].str.replace(' ', '')
 
 new_df['combined_location'] = \
