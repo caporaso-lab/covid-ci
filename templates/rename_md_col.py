@@ -19,9 +19,6 @@ if 'gisaid_epi_isl' in df.columns:
     non_epi_ids = ~new_df['gisaid_epi_isl'].str.startswith('EPI_')
     new_df['gisaid_epi_isl'].loc[non_epi_ids] = None
 
-# this info isn't in the metadata files i've been working with so far - 
-# do we use this anywhere or can we just drop it? we can always look 
-# this up for specific sequences as needed.
 if 'submitting_lab' in df.columns:
     new_df['submitting_lab'] = df['submitting_lab']
 else:
@@ -42,7 +39,10 @@ new_df['combined_location'] = \
         lambda x: '.'.join([s if type(s) == str else 'MISSING' for s in x]),
         axis=1)
 
-new_df['date'] = df['collection_date']
+if 'collection_date' in df.columns:
+    new_df['date'] = df['collection_date']
+else:
+    new_df['date'] = df['date']
 
 new_df = new_df.loc[new_df['id'].notna()]
 
