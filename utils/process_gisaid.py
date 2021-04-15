@@ -30,7 +30,7 @@ def _file_handle_from_tar_fp(archive_fp, target_file_extension):
 def _process_gisaid(sequences_f, md_f, dl_f, output_sequences_fp, 
                     output_metadata_fp, verbose=True, test_run=False):
 
-    genome_metadata_fields = ['id', 
+    genome_metadata_fields = ['strain', 
                              'metadata_id',
                              'fasta_id',
                              'collection_date',
@@ -43,7 +43,8 @@ def _process_gisaid(sequences_f, md_f, dl_f, output_sequences_fp,
                              'location5',
                              'location6',
                              'location7',
-                             'host']
+                             'host',
+                             'originating_lab']
     GenomeMetadata = collections.namedtuple('GenomeMetadata', genome_metadata_fields)
 
     # skip the header line (though ultimately we should use this to id columns of interest)
@@ -67,6 +68,7 @@ def _process_gisaid(sequences_f, md_f, dl_f, output_sequences_fp,
             md_fields = md_line.split('\t')
             md_id = md_fields[0]
             accession_id = md_fields[2]
+            host = md_fields[7]
 
             dl_fields = dl_line.split('\t')
             collection_date = dl_fields[1]
@@ -93,17 +95,17 @@ def _process_gisaid(sequences_f, md_f, dl_f, output_sequences_fp,
                 seq.metadata['id'] = accession_id
                 seq.metadata['description'] = ''
                 genome_metadata[accession_id] = \
-                    GenomeMetadata(id=accession_id, collection_date=collection_date,
+                    GenomeMetadata(strain=accession_id, collection_date=collection_date,
                                 full_location=location, submission_date=submission_date, 
                                 metadata_id=md_id, fasta_id=fasta_id, 
                                 location1=split_location[0], location2=split_location[1], 
                                 location3=split_location[2], location4=split_location[3],
                                 location5=split_location[4], location6=split_location[5],
-                                location7=split_location[6], host=None)
+                                location7=split_location[6], host=host, originating_lab=None)
                 seq.write(output_seqs_f)
             processed_records += 1
     
-    metadata = pd.DataFrame(genome_metadata.values(), columns=genome_metadata_fields).set_index('id')
+    metadata = pd.DataFrame(genome_metadata.values(), columns=genome_metadata_fields).set_index('strain')
     metadata.to_csv(output_metadata_fp, sep='\t')
 
     if verbose: print("🦠 Processed %d records." % processed_records)

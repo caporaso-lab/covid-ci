@@ -19,6 +19,9 @@ if 'gisaid_epi_isl' in df.columns:
     non_epi_ids = ~new_df['gisaid_epi_isl'].str.startswith('EPI_')
     new_df['gisaid_epi_isl'].loc[non_epi_ids] = None
 
+# this info isn't in the metadata files i've been working with so far - 
+# do we use this anywhere or can we just drop it? we can always look 
+# this up for specific sequences as needed.
 if 'submitting_lab' in df.columns:
     new_df['submitting_lab'] = df['submitting_lab']
 else:
@@ -29,17 +32,17 @@ if 'host' not in df.columns:
 else:
     new_df['host'] = df['host']
 
-new_df['region'] = df['region'].str.replace(' ', '')
-new_df['country'] = df['country'].str.replace(' ', '')
-new_df['division'] = df['division'].str.replace(' ', '')
-new_df['location'] = df['location'].str.replace(' ', '')
+new_df['region'] = df['location1'].str.replace(' ', '')
+new_df['country'] = df['location2'].str.replace(' ', '')
+new_df['division'] = df['location3'].str.replace(' ', '')
+new_df['location'] = df['location4'].str.replace(' ', '')
 
 new_df['combined_location'] = \
     new_df[['country', 'division', 'location']].agg(
         lambda x: '.'.join([s if type(s) == str else 'MISSING' for s in x]),
         axis=1)
 
-new_df['date'] = df['date']
+new_df['date'] = df['collection_date']
 
 new_df = new_df.loc[new_df['id'].notna()]
 
