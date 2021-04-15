@@ -39,7 +39,10 @@ new_df['combined_location'] = \
         lambda x: '.'.join([s if type(s) == str else 'MISSING' for s in x]),
         axis=1)
 
-new_df['date'] = df['date']
+if 'collection_date' in df.columns:
+    new_df['date'] = df['collection_date']
+else:
+    new_df['date'] = df['date']
 
 new_df = new_df.loc[new_df['id'].notna()]
 
