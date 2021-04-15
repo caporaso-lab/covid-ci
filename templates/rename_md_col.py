@@ -29,10 +29,10 @@ if 'host' not in df.columns:
 else:
     new_df['host'] = df['host']
 
-new_df['region'] = df['location1'].str.replace(' ', '')
-new_df['country'] = df['location2'].str.replace(' ', '')
-new_df['division'] = df['location3'].str.replace(' ', '')
-new_df['location'] = df['location4'].str.replace(' ', '')
+new_df['region'] = df['region'].str.replace(' ', '')
+new_df['country'] = df['country'].str.replace(' ', '')
+new_df['division'] = df['divsion'].str.replace(' ', '')
+new_df['location'] = df['location'].str.replace(' ', '')
 
 new_df['combined_location'] = \
     new_df[['country', 'division', 'location']].agg(

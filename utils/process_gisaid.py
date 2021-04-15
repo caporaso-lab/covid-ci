@@ -36,13 +36,10 @@ def _process_gisaid(sequences_f, md_f, dl_f, output_sequences_fp,
                              'collection_date',
                              'submission_date',
                              'full_location',
-                             'location1',
-                             'location2',
-                             'location3',
-                             'location4',
-                             'location5',
-                             'location6',
-                             'location7',
+                             'region',
+                             'country',
+                             'division',
+                             'location',
                              'host',
                              'originating_lab']
     GenomeMetadata = collections.namedtuple('GenomeMetadata', genome_metadata_fields)
@@ -73,8 +70,8 @@ def _process_gisaid(sequences_f, md_f, dl_f, output_sequences_fp,
             dl_fields = dl_line.split('\t')
             collection_date = dl_fields[1]
             location = dl_fields[2]
-            split_location = [None] * 7
-            for i, loc in enumerate(location.split('/')):
+            split_location = [None] * 5
+            for i, loc in enumerate(location.split('/', maxsplit=4)):
                 split_location[i] = loc.strip()
             submission_date = dl_fields[4]
 
@@ -98,10 +95,9 @@ def _process_gisaid(sequences_f, md_f, dl_f, output_sequences_fp,
                     GenomeMetadata(strain=accession_id, collection_date=collection_date,
                                 full_location=location, submission_date=submission_date, 
                                 metadata_id=md_id, fasta_id=fasta_id, 
-                                location1=split_location[0], location2=split_location[1], 
-                                location3=split_location[2], location4=split_location[3],
-                                location5=split_location[4], location6=split_location[5],
-                                location7=split_location[6], host=host, originating_lab=None)
+                                region=split_location[0], country=split_location[1], 
+                                division=split_location[2], location=split_location[3],
+                                host=host, originating_lab=None)
                 seq.write(output_seqs_f)
             processed_records += 1
     
